@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>The Fridge Graveyard</title>
+<meta name="description" content="A food-waste detective app prototype: track expiry dates, rescue leftovers, find recipes, build shopping lists." />
+<meta name="theme-color" content="#0b0f14" />
+
+<!--
+  THE FRIDGE GRAVEYARD — single-file prototype
+  - React 18 + Tailwind (Play CDN) + Babel Standalone, all loaded from CDNs. Needs an internet
+    connection on first open.
+  - State is saved by the Python backend (backend/main.py) in SQLite via GET/PUT /api/state.
+  - All data shown (fridge items, prices, stats history, plans) is SIMULATED demo data.
+  Assumption: Babel compiles the JSX in the browser. That is fine for a prototype; a production
+  build would precompile with Vite or similar.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Special+Elite&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com/3.4.5"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+          noir: ['"Special Elite"', '"Courier New"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  :root { color-scheme: dark; }
+  body {
+    background-color: #0b0f14;
+    /* subtle film-grain + spotlight for the noir mood */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(250, 204, 21, 0.07), transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
+    color: #e2e8f0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .caution-tape {
+    background: repeating-linear-gradient(-45deg, #facc15 0 12px, #111827 12px 24px);
+  }
+  /* lined detective-notebook paper (dark variant so it stays readable) */
+  .notebook {
+    background-color: #111827;
+    background-image: linear-gradient(transparent calc(100% - 1px), rgba(148, 163, 184, 0.12) 0);
+    background-size: 100% 26px;
+    line-height: 26px;
+    border-left: 2px solid rgba(239, 68, 68, 0.35);
+  }
+  /* evidence tag with a punched hole */
+  .evidence-tag {
+    position: relative;
+    padding-left: 18px;
+  }
+  .evidence-tag::before {
+    content: '';
+    position: absolute;
+    left: 6px; top: 50%;
+    width: 6px; height: 6px;
+    margin-top: -3px;
+    border-radius: 9999px;
+    background: #0b0f14;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.4) inset;
+  }
+  :focus-visible { outline: 2px solid #facc15; outline-offset: 2px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .pop { animation: pop 160ms ease-out; }
+    @keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  }
+  /* hide number spinners for a cleaner form */
+  input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+</style>
+</head>
+<body class="font-sans antialiased">
+<div id="root">
+  <p style="padding:2rem;font-family:monospace;color:#94a3b8">Dusting for fingerprints… (loading the app — needs an internet connection for React/Tailwind CDNs)</p>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js" crossorigin></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* =========================================================================
+   CONSTANTS & HELPERS
+   ========================================================================= */
+
+const STORAGE_KEY = 'fridge-graveyard-state';
+const STATE_VERSION = 1;
+
+// --- Dates are stored as local "YYYY-MM-DD" strings so they survive JSON + timezones.
+const pad = (n) => String(n).padStart(2, '0');
+const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseISO = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const todayISO = () => toISO(new Date());
+const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); };
+const daysLeft = (item) => Math.round((parseISO(item.expiryDate) - parseISO(todayISO())) / 86400000);
+const fmtDate = (iso) => parseISO(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+const uid = () => Math.random().toString(36).slice(2, 10);
+const caseNo = (id) => '#' + String(id).padStart(4, '0');
+const euro = (n) => '€' + (Math.round(n * 100) / 100).toFixed(2);
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// Category metadata. `shelf` = default fridge life in days (used to pre-fill expiry when adding),
+// `price` = SIMULATED average item value in EUR (used for money saved/wasted estimates).
+const CATEGORIES = {
+  'Dairy & Eggs':        { emoji: '🥛', shelf: 7,  price: 1.6, freezable: false },
+  'Meat & Fish':         { emoji: '🥩', shelf: 2,  price: 4.5, freezable: true },
+  'Vegetables':          { emoji: '🥬', shelf: 6,  price: 1.3, freezable: false },
+  'Fruit':               { emoji: '🍌', shelf: 5,  price: 1.5, freezable: true },
+  'Bakery':              { emoji: '🍞', shelf: 4,  price: 2.0, freezable: true },
+  'Cooked & Leftovers':  { emoji: '🍲', shelf: 3,  price: 3.5, freezable: true },
+  'Grains & Pasta':      { emoji: '🍝', shelf: 30, price: 1.5, freezable: false },
+  'Sauces & Condiments': { emoji: '🫙', shelf: 30, price: 2.5, freezable: false },
+  'Drinks':              { emoji: '🧃', shelf: 7,  price: 1.5, freezable: false },
+  'Other':               { emoji: '📦', shelf: 5,  price: 2.0, freezable: false },
+};
+const catMeta = (c) => CATEGORIES[c] || CATEGORIES.Other;
+const UNITS = ['pcs', 'g', 'kg', 'ml', 'L', 'pack', 'portion', 'slice', 'cup', 'bag', 'jar', 'bunch'];
+
+const STATUS = {
+  fresh:    { label: 'Fresh',    icon: '🟢', bar: 'bg-emerald-400', text: 'text-emerald-300', chip: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' },
+  warning:  { label: 'Warning',  icon: '🟠', bar: 'bg-amber-400',   text: 'text-amber-300',   chip: 'bg-amber-500/15 text-amber-300 border-amber-500/40' },
+  critical: { label: 'Critical', icon: '🔴', bar: 'bg-red-500',     text: 'text-red-300',     chip: 'bg-red-500/15 text-red-300 border-red-500/50' },
+  expired:  { label: 'Deceased', icon: '🪦', bar: 'bg-zinc-600',    text: 'text-zinc-400',    chip: 'bg-zinc-700/40 text-zinc-300 border-zinc-500/50' },
+};
+
+// Thresholds: expired < 0 days, critical 0–1 days, warning 2–3 days, fresh 4+ days.
+function getStatus(item) {
+  const d = daysLeft(item);
+  if (d < 0) return 'expired';
+  if (d <= 1) return 'critical';
+  if (d <= 3) return 'warning';
+  return 'fresh';
+}
+
+// Priority order: soonest expiry first; leftovers win ties (they are the most forgotten).
+function byPriority(a, b) {
+  const d = daysLeft(a) - daysLeft(b);
+  if (d !== 0) return d;
+  return (b.isLeftover ? 1 : 0) - (a.isLeftover ? 1 : 0);
+}
+
+function daysText(item) {
+  const d = daysLeft(item);
+  if (d < -1) return `Expired ${-d} days ago`;
+  if (d === -1) return 'Expired yesterday';
+  if (d === 0) return 'Expires today';
+  if (d === 1) return 'Expires tomorrow';
+  return `${d} days left`;
+}
+
+// The detective's recommendation. Keeps to the four verbs from the brief + a calm "Keep watch".
+function suggestAction(item) {
+  const s = getStatus(item);
+  const cat = catMeta(item.category);
+  if (s === 'expired') return { key: 'toss', label: 'Toss', icon: '🗑️',
+    reason: "Past its date. If it's only a best-before date, look, smell and taste first. If it's a use-by date (meat, fish, leftovers), let it rest in peace." };
+  if (s === 'critical') {
+    if (item.isLeftover) return { key: 'eat', label: 'Eat first', icon: '🍽️', reason: 'Leftovers on their last day. Make this your next meal.' };
+    if (cat.freezable && !item.frozen) return { key: 'freeze', label: 'Freeze', icon: '🧊', reason: "Won't survive past tomorrow. Cook it tonight, or freeze it now to buy weeks." };
+    return { key: 'cook', label: 'Cook tonight', icon: '🍳', reason: 'Expires within a day. Build tonight’s dinner around it.' };
+  }
+  if (s === 'warning') {
+    if (item.isLeftover) return { key: 'eat', label: 'Eat first', icon: '🍽️', reason: 'Leftovers come first. Eat it within the next day or two.' };
+    return { key: 'cook', label: 'Cook tonight', icon: '🍳', reason: 'A few days left. Plan it into one of your next meals.' };
+  }
+  return { key: 'watch', label: 'Keep watch', icon: '👁️', reason: 'Fresh for now. No action needed.' };
+}
+
+// Weight used to rank recipes: at-risk items and leftovers count most.
+function urgencyWeight(item) {
+  const s = getStatus(item);
+  let w = s === 'critical' ? 5 : s === 'warning' ? 3 : 1;
+  if (item.isLeftover) w += 3;
+  return w;
+}
+
+/* =========================================================================
+   LOCAL RECIPE DATASET (simulated, no API)
+   `keys` are word-prefixes matched against fridge item names.
+   Assumption: salt, pepper, oil and water are always in the pantry, so they are not listed.
+   `missingIngredients` and `usesItems` are DERIVED at runtime from the fridge (see analyzeRecipe).
+   ========================================================================= */
+const RECIPES = [
+  { id: 'r1', title: 'The Usual Suspects Stir-Fry', time: 25, difficulty: 'Easy',
+    blurb: 'Round up whatever veg is loitering, add chicken, and interrogate it in a hot pan.',
+    ingredients: [
+      { name: 'Chicken', keys: ['chicken'], qty: 300, unit: 'g' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'bottle' },
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+    ] },
+  { id: 'r2', title: 'Cold Case Curry', time: 15, difficulty: 'Easy',
+    blurb: 'Reopen yesterday’s curry. Stretch it with fresh spinach and tomatoes over rice.',
+    ingredients: [
+      { name: 'Leftover curry', keys: ['curry'], qty: 1, unit: 'portion' },
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'bag' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 2, unit: 'pcs' },
+    ] },
+  { id: 'r3', title: 'The Getaway Frittata', time: 20, difficulty: 'Easy',
+    blurb: 'Eggs are the perfect accomplice: they hide any vegetable you need to get rid of.',
+    ingredients: [
+      { name: 'Eggs', keys: ['egg'], qty: 6, unit: 'pcs' },
+      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'bag' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 100, unit: 'g' },
+      { name: 'Mushrooms', keys: ['mushroom'], qty: 150, unit: 'g' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r4', title: 'Bolognese Alibi Bake', time: 30, difficulty: 'Medium',
+    blurb: 'The leftover sauce says it was home all night. Pasta and cheese back up the story.',
+    ingredients: [
+      { name: 'Leftover bolognese', keys: ['bolognese', 'ragu'], qty: 1, unit: 'portion' },
+      { name: 'Pasta', keys: ['pasta', 'penne', 'spaghetti', 'fusilli'], qty: 250, unit: 'g' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan'], qty: 100, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 2, unit: 'pcs' },
+    ] },
+  { id: 'r5', title: 'Stakeout Quesadillas', time: 15, difficulty: 'Easy',
+    blurb: 'Fast, folded, and perfect for long nights watching the fridge.',
+    ingredients: [
+      { name: 'Tortillas', keys: ['tortilla', 'wrap'], qty: 4, unit: 'pcs' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella'], qty: 150, unit: 'g' },
+      { name: 'Chicken', keys: ['chicken'], qty: 200, unit: 'g' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r6', title: 'Fingerprint French Toast', time: 15, difficulty: 'Easy',
+    blurb: 'Stale bread leaves no evidence once it’s soaked in egg and milk.',
+    ingredients: [
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 4, unit: 'slice' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+      { name: 'Milk', keys: ['milk'], qty: 200, unit: 'ml' },
+      { name: 'Banana', keys: ['banana'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r7', title: 'Smoking Gun Shakshuka', time: 25, difficulty: 'Medium',
+    blurb: 'Eggs poached in a spicy tomato sauce. Soft tomatoes are welcome at this scene.',
+    ingredients: [
+      { name: 'Eggs', keys: ['egg'], qty: 4, unit: 'pcs' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 4, unit: 'pcs' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette'], qty: 2, unit: 'slice' },
+    ] },
+  { id: 'r8', title: 'Witness Protection Smoothie', time: 5, difficulty: 'Easy',
+    blurb: 'Brown bananas and wilting spinach get a new identity. Nobody will recognise them.',
+    ingredients: [
+      { name: 'Banana', keys: ['banana'], qty: 2, unit: 'pcs' },
+      { name: 'Yogurt', keys: ['yogurt', 'yoghurt', 'skyr'], qty: 150, unit: 'g' },
+      { name: 'Milk', keys: ['milk'], qty: 200, unit: 'ml' },
+      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'handful' },
+    ] },
+  { id: 'r9', title: 'Midnight Alibi Fried Rice', time: 15, difficulty: 'Easy',
+    blurb: 'Day-old rice is the best rice. That’s the alibi, and it checks out.',
+    ingredients: [
+      { name: 'Cooked rice', keys: ['rice'], qty: 2, unit: 'cup' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'bottle' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Frozen peas', keys: ['pea'], qty: 150, unit: 'g' },
+      { name: 'Garlic', keys: ['garlic'], qty: 1, unit: 'clove' },
+    ] },
+  { id: 'r10', title: 'The Mushroom Mob Toast', time: 10, difficulty: 'Easy',
+    blurb: 'Garlicky mushrooms on toast, finished with melted cheese. Quick hit.',
+    ingredients: [
+      { name: 'Mushrooms', keys: ['mushroom'], qty: 250, unit: 'g' },
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 2, unit: 'slice' },
+      { name: 'Garlic', keys: ['garlic'], qty: 1, unit: 'clove' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan'], qty: 50, unit: 'g' },
+    ] },
+  { id: 'r11', title: 'Interrogation Room Tomato Soup', time: 35, difficulty: 'Medium',
+    blurb: 'Under the heat lamp, tired tomatoes confess everything. Serve with crusty bread.',
+    ingredients: [
+      { name: 'Tomatoes', keys: ['tomato'], qty: 6, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Milk', keys: ['milk', 'cream'], qty: 100, unit: 'ml' },
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette'], qty: 2, unit: 'slice' },
+    ] },
+];
+
+// Word-prefix match: "rice" matches "Cooked rice" but not "licorice".
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const matchesIngredient = (item, ing) => ing.keys.some((k) => new RegExp('\\b' + escapeRe(k), 'i').test(item.name));
+
+function analyzeRecipe(recipe, items) {
+  // Expired items are never suggested as ingredients.
+  const usable = items.filter((i) => getStatus(i) !== 'expired').sort(byPriority);
+  const taken = new Set();
+  const usesItems = [];
+  const missingIngredients = [];
+  for (const ing of recipe.ingredients) {
+    const hit = usable.find((i) => !taken.has(i.id) && matchesIngredient(i, ing));
+    if (hit) { taken.add(hit.id); usesItems.push({ ingredient: ing.name, item: hit }); }
+    else missingIngredients.push(ing);
+  }
+  const score = usesItems.reduce((s, u) => s + urgencyWeight(u.item), 0) - missingIngredients.length * 0.75;
+  const rescues = usesItems.filter((u) => u.item.isLeftover || ['critical', 'warning'].includes(getStatus(u.item))).length;
+  return { ...recipe, usesItems, missingIngredients, score, rescues };
+}
+
+/* =========================================================================
+   SEED DATA (simulated). Dates are relative to today so the demo always looks alive.
+   ========================================================================= */
+function makeSeed() {
+  const t = todayISO();
+  // [name, category, qty, unit, addedOffset, expiryOffset, notes, isLeftover]
+  const raw = [
+    ['Leftover Thai curry', 'Cooked & Leftovers', 1, 'portion', -2, 1, 'From Sunday dinner. Top shelf, blue lid.', true],
+    ['Cooked rice', 'Cooked & Leftovers', 2, 'cup', -1, 0, 'Reheat until steaming hot.', true],
+    ['Chicken breast', 'Meat & Fish', 400, 'g', -2, 1, '', false],
+    ['Baby spinach', 'Vegetables', 1, 'bag', -4, 1, 'Starting to wilt.', false],
+    ['Bananas', 'Fruit', 2, 'pcs', -5, 1, 'Spotty. Perfect for smoothies.', false],
+    ['Milk', 'Dairy & Eggs', 1, 'L', -4, 2, 'Half full.', false],
+    ['Tomatoes', 'Vegetables', 4, 'pcs', -3, 2, '', false],
+    ['Mushrooms', 'Vegetables', 250, 'g', -2, 2, '', false],
+    ['Sourdough bread', 'Bakery', 0.5, 'loaf', -2, 2, '', false],
+    ['Leftover bolognese', 'Cooked & Leftovers', 2, 'portion', -1, 3, 'Freezes well.', true],
+    ['Bell pepper', 'Vegetables', 2, 'pcs', -2, 4, '', false],
+    ['Tortillas', 'Bakery', 6, 'pcs', -3, 5, '', false],
+    ['Eggs', 'Dairy & Eggs', 6, 'pcs', -5, 9, '', false],
+    ['Cheddar cheese', 'Dairy & Eggs', 200, 'g', -6, 12, '', false],
+    ['Onions', 'Vegetables', 3, 'pcs', -7, 14, '', false],
+    ['Garlic', 'Vegetables', 1, 'bulb', -10, 20, '', false],
+    ['Soy sauce', 'Sauces & Condiments', 1, 'bottle', -40, 90, '', false],
+    ['Greek yogurt', 'Dairy & Eggs', 500, 'g', -12, -2, 'Lid is bulging. Suspicious.', false],
+  ];
+  const items = raw.map((r, i) => ({
+    id: 101 + i,
+    name: r[0], category: r[1], quantity: r[2], unit: r[3],
+    addedDate: addDays(t, r[4]), expiryDate: addDays(t, r[5]),
+    notes: r[6], isLeftover: r[7],
+    frozen: false, // extension to the data model: set by the "Freeze" quick action
+  }));
+
+  const shopping = [
+    { id: uid(), name: 'Coffee beans', quantity: 1, unit: 'bag', checked: false, source: 'Manual' },
+    { id: uid(), name: 'Lemons', quantity: 3, unit: 'pcs', checked: true, source: 'Manual' },
+  ];
+
+  // Simulated history so the Stats tab has something to show. Marked demo: true.
+  const log = [
+    ['Leftover lasagne', 'eaten', 'Cooked & Leftovers', -1],
+    ['Carrots', 'eaten', 'Vegetables', -2],
+    ['Mozzarella', 'wasted', 'Dairy & Eggs', -3],
+    ['Salmon fillet', 'eaten', 'Meat & Fish', -4],
+    ['Strawberries', 'eaten', 'Fruit', -5],
+    ['Bagels', 'wasted', 'Bakery', -6],
+    ['Leftover chili', 'eaten', 'Cooked & Leftovers', -8],
+    ['Broccoli', 'eaten', 'Vegetables', -9],
+  ].map(([name, outcome, category, off]) => ({ id: uid(), name, outcome, category, date: addDays(t, off), value: catMeta(category).price, demo: true }));
+
+  const stats = { rescued: 0, wasted: 0, moneySaved: 0, moneyWasted: 0 };
+  log.forEach((e) => {
+    if (e.outcome === 'eaten') { stats.rescued++; stats.moneySaved += e.value; }
+    else { stats.wasted++; stats.moneyWasted += e.value; }
+  });
+
+  return { version: STATE_VERSION, nextId: 101 + raw.length, items, shopping, stats, log, demo: true };
+}
+
+function makeEmpty() {
+  return { version: STATE_VERSION, nextId: 101, items: [], shopping: [], stats: { rescued: 0, wasted: 0, moneySaved: 0, moneyWasted: 0 }, log: [], demo: false };
+}
+
+const API = '/api/state';
+
+// Load state from the Python backend. Falls back to demo data if nothing is saved yet.
+async function loadState() {
+  try {
+    const res = await fetch(API);
+    if (res.ok) {
+      const { state: s } = await res.json();
+      if (s && s.version === STATE_VERSION && Array.isArray(s.items)) return s;
+    }
+  } catch (e) { /* backend not reachable: fall back to seed */ }
+  return makeSeed();
+}
+
+async function saveState(state) {
+  await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
+}
+
+/* =========================================================================
+   SMALL UI PRIMITIVES
+   ========================================================================= */
+
+function StatusBadge({ item, size = 'sm' }) {
+  const s = getStatus(item);
+  const m = STATUS[s];
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono uppercase tracking-wide ${m.chip} ${size === 'lg' ? 'text-xs' : 'text-[10px]'}`}>
+      <span aria-hidden="true">{m.icon}</span>{m.label}
+    </span>
+  );
+}
+
+function Btn({ variant = 'secondary', className = '', ...props }) {
+  const styles = {
+    primary: 'bg-yellow-400 text-slate-950 hover:bg-yellow-300 font-semibold',
+    secondary: 'bg-slate-800 text-slate-100 hover:bg-slate-700 border border-slate-700',
+    ghost: 'text-slate-300 hover:bg-slate-800',
+    danger: 'bg-red-500/15 text-red-300 border border-red-500/40 hover:bg-red-500/25',
+    success: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25',
+    ice: 'bg-sky-500/15 text-sky-300 border border-sky-500/40 hover:bg-sky-500/25',
+  };
+  return (
+    <button
+      type="button"
+      {...props}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${styles[variant]} ${className}`}
+    />
+  );
+}
+
+function SectionTitle({ kicker, title, children }) {
+  return (
+    <div className="mb-4">
+      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-yellow-400/80">{kicker}</p>
+      <h2 className="font-noir text-2xl text-slate-50">{title}</h2>
+      {children && <p className="mt-1 text-sm text-slate-400">{children}</p>}
+    </div>
+  );
+}
+
+// Chalk outline used for empty states.
+function ChalkOutline({ kind = 'fridge' }) {
+  return (
+    <svg viewBox="0 0 120 120" className="mx-auto h-28 w-28" aria-hidden="true" fill="none" stroke="rgba(241,245,249,0.75)" strokeWidth="2.5" strokeDasharray="6 5" strokeLinecap="round">
+      {kind === 'fridge' && (<>
+        <rect x="32" y="12" width="56" height="96" rx="8" />
+        <line x1="32" y1="46" x2="88" y2="46" />
+        <line x1="78" y1="24" x2="78" y2="36" />
+        <line x1="78" y1="56" x2="78" y2="74" />
+      </>)}
+      {kind === 'list' && (<>
+        <rect x="28" y="14" width="64" height="92" rx="6" />
+        <line x1="40" y1="38" x2="80" y2="38" /><line x1="40" y1="56" x2="80" y2="56" /><line x1="40" y1="74" x2="66" y2="74" />
+      </>)}
+      {kind === 'pan' && (<>
+        <circle cx="54" cy="64" r="30" />
+        <line x1="84" y1="64" x2="112" y2="64" />
+      </>)}
+      {kind === 'file' && (<>
+        <path d="M24 30h28l8 8h36v58H24z" />
+        <line x1="40" y1="62" x2="80" y2="62" />
+      </>)}
+    </svg>
+  );
+}
+
+function EmptyState({ kind, title, children, action }) {
+  return (
+    <div className="pop rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-10 text-center">
+      <ChalkOutline kind={kind} />
+      <p className="mt-4 font-noir text-lg text-slate-100">{title}</p>
+      {children && <p className="mx-auto mt-1 max-w-sm text-sm text-slate-400">{children}</p>}
+      {action && <div className="mt-5">{action}</div>}
+    </div>
+  );
+}
+
+// Accessible modal: Escape closes, focus is trapped and restored, background scroll locked.
+function Modal({ open, onClose, title, kicker, children, footer }) {
+  const ref = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const titleId = useMemo(() => 'm-' + uid(), []);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.activeElement;
+    const focusables = () => Array.from(ref.current?.querySelectorAll('button:not([disabled]), input, select, textarea, [href]') || []);
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); closeRef.current(); }
+      if (e.key === 'Tab') {
+        const f = focusables(); if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    const t = setTimeout(() => {
+      const el = ref.current?.querySelector('[data-autofocus]') || focusables()[0];
+      el?.focus();
+    }, 0);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { clearTimeout(t); document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; prev?.focus?.(); };
+  }, [open]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
+      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId}
+        className="pop relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl border border-slate-700 bg-slate-900 shadow-2xl sm:max-w-lg sm:rounded-2xl">
+        <div className="caution-tape h-1.5 shrink-0" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-3 border-b border-slate-800 px-5 py-4">
+          <div className="min-w-0">
+            {kicker && <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-yellow-400/80">{kicker}</p>}
+            <h2 id={titleId} className="font-noir text-xl text-slate-50">{title}</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100">✕</button>
+        </div>
+        <div className="overflow-y-auto px-5 py-4">{children}</div>
+        {footer && <div className="shrink-0 border-t border-slate-800 bg-slate-900/95 px-5 py-3">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ confirm, onClose }) {
+  if (!confirm) return null;
+  return (
+    <Modal open onClose={onClose} kicker="Confirm" title={confirm.title}
+      footer={<div className="flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onClose} data-autofocus>Cancel</Btn>
+        <Btn variant={confirm.danger ? 'danger' : 'primary'} onClick={() => { confirm.onConfirm(); onClose(); }}>{confirm.confirmLabel || 'Confirm'}</Btn>
+      </div>}>
+      <p className="text-sm text-slate-300">{confirm.body}</p>
+    </Modal>
+  );
+}
+
+/* =========================================================================
+   1. CRIME SCENE DASHBOARD
+   ========================================================================= */
+
+function EvidenceCard({ item, onOpen }) {
+  const s = getStatus(item);
+  const m = STATUS[s];
+  const action = suggestAction(item);
+  const dead = s === 'expired';
+  return (
+    <li>
+      <button type="button" onClick={() => onOpen(item.id)}
+        aria-label={`${item.name}, ${m.label}, ${daysText(item)}. Suggested: ${action.label}. Open case file.`}
+        className={`group relative flex w-full items-stretch gap-3 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 p-3 pl-4 text-left transition hover:border-slate-600 hover:bg-slate-900 ${dead ? 'opacity-75' : ''}`}>
+        <span className={`absolute inset-y-0 left-0 w-1.5 ${m.bar}`} aria-hidden="true" />
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-2xl ${dead ? 'grayscale' : ''}`} aria-hidden="true">
+          {catMeta(item.category).emoji}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="evidence-tag rounded-sm bg-yellow-400/90 pr-1.5 font-mono text-[10px] font-semibold uppercase leading-4 text-slate-900">Evidence {caseNo(item.id)}</span>
+            {item.isLeftover && <span className="rounded-sm bg-violet-500/20 px-1.5 font-mono text-[10px] uppercase leading-4 text-violet-200">Leftover</span>}
+            {item.frozen && <span className="rounded-sm bg-sky-500/20 px-1.5 font-mono text-[10px] uppercase leading-4 text-sky-200">Frozen</span>}
+          </div>
+          <p className={`mt-1 truncate font-semibold text-slate-100 ${dead ? 'line-through decoration-zinc-500' : ''}`}>{item.name}</p>
+          <p className="truncate text-xs text-slate-400">{item.quantity} {item.unit} · {item.category}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end justify-between gap-1 text-right">
+          <StatusBadge item={item} />
+          <span className={`font-mono text-[11px] ${m.text}`}>{daysText(item)}</span>
+          <span className="text-[11px] text-slate-300"><span aria-hidden="true">{action.icon}</span> {action.label}</span>
+        </div>
+      </button>
+    </li>
+  );
+}
+
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'leftover', label: 'Leftovers' },
+  { id: 'critical', label: 'Critical' },
+  { id: 'warning', label: 'Warning' },
+  { id: 'fresh', label: 'Fresh' },
+  { id: 'expired', label: 'Deceased' },
+];
+
+function Dashboard({ items, onOpen, onAdd, goRecipes }) {
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const sorted = useMemo(() => [...items].sort(byPriority), [items]);
+
+  const counts = useMemo(() => {
+    const c = { all: items.length, leftover: 0, fresh: 0, warning: 0, critical: 0, expired: 0 };
+    items.forEach((i) => { c[getStatus(i)]++; if (i.isLeftover) c.leftover++; });
+    return c;
+  }, [items]);
+
+  const visible = sorted.filter((i) => {
+    if (filter === 'leftover' && !i.isLeftover) return false;
+    if (!['all', 'leftover'].includes(filter) && getStatus(i) !== filter) return false;
+    if (query && !i.name.toLowerCase().includes(query.toLowerCase())) return false;
+    return true;
+  });
+
+  // Prime suspect: most urgent item that can still be saved (leftovers first on ties).
+  const atRisk = sorted.filter((i) => ['critical', 'warning'].includes(getStatus(i)));
+  const prime = atRisk[0];
+
+  if (items.length === 0) {
+    return (
+      <>
+        <SectionTitle kicker="Crime scene" title="The Fridge" />
+        <EmptyState kind="fridge" title="No evidence found. Your fridge is suspiciously clean."
+          action={<Btn variant="primary" onClick={onAdd}>+ Log first piece of evidence</Btn>}>
+          Add what's in your fridge and the detective will tell you what to eat first.
+        </EmptyState>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SectionTitle kicker="Crime scene" title="The Fridge">
+        {plural(items.length, 'piece')} of evidence, sorted by soonest expiry.
+      </SectionTitle>
+
+      {/* Case briefing */}
+      <section aria-labelledby="briefing" className="mb-4 overflow-hidden rounded-2xl border border-yellow-400/30 bg-gradient-to-br from-slate-900 to-slate-900/60">
+        <div className="caution-tape h-1" aria-hidden="true" />
+        <div className="p-4">
+          <p id="briefing" className="font-mono text-[11px] uppercase tracking-[0.2em] text-yellow-400/80">Case briefing · {fmtDate(todayISO())}</p>
+          {prime ? (
+            <>
+              <p className="mt-1 text-slate-100">
+                <strong className="text-red-300">{counts.critical} critical</strong>, <strong className="text-amber-300">{counts.warning} warning</strong>
+                {counts.expired > 0 && <>, <strong className="text-zinc-300">{counts.expired} deceased</strong></>}.
+                {' '}Prime suspect: <strong>{prime.name}</strong> <span className="text-slate-400">({daysText(prime).toLowerCase()})</span>.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Btn variant="primary" onClick={() => onOpen(prime.id)}>🔦 Interrogate suspect</Btn>
+                <Btn onClick={goRecipes}>🍳 Recipes that rescue them</Btn>
+              </div>
+            </>
+          ) : (
+            <p className="mt-1 text-slate-200">
+              All quiet on the shelves. Nothing expires in the next 3 days.
+              {counts.expired > 0 && <> {plural(counts.expired, 'item')} already passed on, though. Check the deceased.</>}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Filters */}
+      <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Filter evidence">
+        {FILTERS.map((f) => (
+          <button key={f.id} type="button" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition ${filter === f.id ? 'border-yellow-400 bg-yellow-400 font-semibold text-slate-950' : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500'}`}>
+            {f.label} <span className="font-mono opacity-70">{counts[f.id]}</span>
+          </button>
+        ))}
+      </div>
+
+      <label className="mb-4 block">
+        <span className="sr-only">Search evidence</span>
+        <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="🔍 Search the evidence locker…"
+          className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-yellow-400 focus:outline-none" />
+      </label>
+
+      {visible.length === 0 ? (
+        <EmptyState kind="file" title="No suspects match this filter.">Try another filter or clear the search.</EmptyState>
+      ) : (
+        <ul className="space-y-2.5">{visible.map((i) => <EvidenceCard key={i.id} item={i} onOpen={onOpen} />)}</ul>
+      )}
+    </>
+  );
+}
+
+/* =========================================================================
+   ADD / EDIT ITEM
+   ========================================================================= */
+
+function ItemFormModal({ open, initial, onClose, onSave }) {
+  const isEdit = !!initial?.id;
+  const blank = () => {
+    const t = todayISO();
+    return { name: '', category: 'Vegetables', quantity: 1, unit: 'pcs', addedDate: t, expiryDate: addDays(t, CATEGORIES.Vegetables.shelf), notes: '', isLeftover: false };
+  };
+  const [form, setForm] = useState(blank);
+  const [expiryTouched, setExpiryTouched] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) { setForm(initial ? { ...blank(), ...initial } : blank()); setExpiryTouched(isEdit); setError(''); }
+  }, [open]);
+
+  // For new items, keep the expiry suggestion in sync with category / leftover / added date
+  // until the user sets it manually. Leftovers default to 3 days (common food-safety guidance).
+  const update = (patch) => setForm((f) => {
+    const next = { ...f, ...patch };
+    if (!expiryTouched && ('category' in patch || 'isLeftover' in patch || 'addedDate' in patch)) {
+      const shelf = next.isLeftover ? 3 : catMeta(next.category).shelf;
+      next.expiryDate = addDays(next.addedDate || todayISO(), shelf);
+    }
+    return next;
+  });
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return setError('Every piece of evidence needs a name.');
+    if (!form.expiryDate) return setError('An expiry date is required.');
+    onSave({ ...form, name: form.name.trim(), quantity: Number(form.quantity) || 1 });
+  };
+
+  const field = 'mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-yellow-400 focus:outline-none';
+  const label = 'block font-mono text-[11px] uppercase tracking-wider text-slate-400';
+
+  return (
+    <Modal open={open} onClose={onClose} kicker={isEdit ? `Case file ${caseNo(initial.id)}` : 'New evidence'} title={isEdit ? 'Edit evidence' : 'Log evidence'}
+      footer={<div className="flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+        <Btn variant="primary" type="submit" form="item-form">{isEdit ? 'Save changes' : 'Add to fridge'}</Btn>
+      </div>}>
+      <form id="item-form" onSubmit={submit} className="space-y-4" noValidate>
+        <label className="block"><span className={label}>Name *</span>
+          <input data-autofocus className={field} value={form.name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Leftover lasagne" required />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="col-span-2 block sm:col-span-1"><span className={label}>Category</span>
+            <select className={field} value={form.category} onChange={(e) => update({ category: e.target.value })}>
+              {Object.keys(CATEGORIES).map((c) => <option key={c} value={c}>{CATEGORIES[c].emoji} {c}</option>)}
+            </select>
+          </label>
+          <div className="col-span-2 grid grid-cols-2 gap-3 sm:col-span-1">
+            <label className="block"><span className={label}>Qty</span>
+              <input type="number" min="0" step="any" inputMode="decimal" className={field} value={form.quantity} onChange={(e) => update({ quantity: e.target.value })} />
+            </label>
+            <label className="block"><span className={label}>Unit</span>
+              <input list="units" className={field} value={form.unit} onChange={(e) => update({ unit: e.target.value })} />
+              <datalist id="units">{UNITS.map((u) => <option key={u} value={u} />)}</datalist>
+            </label>
+          </div>
+          <label className="block"><span className={label}>Added</span>
+            <input type="date" className={`${field} font-mono`} value={form.addedDate} onChange={(e) => update({ addedDate: e.target.value })} />
+          </label>
+          <label className="block"><span className={label}>Expires *</span>
+            <input type="date" className={`${field} font-mono`} value={form.expiryDate} onChange={(e) => { setExpiryTouched(true); setForm((f) => ({ ...f, expiryDate: e.target.value })); }} required />
+          </label>
+        </div>
+        {!expiryTouched && <p className="-mt-2 text-xs text-slate-500">Expiry pre-filled from typical fridge life. Change it to match the label.</p>}
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5">
+          <input type="checkbox" className="h-4 w-4 accent-yellow-400" checked={form.isLeftover} onChange={(e) => update({ isLeftover: e.target.checked })} />
+          <span className="text-sm text-slate-200">This is a leftover <span className="text-slate-500">(gets priority)</span></span>
+        </label>
+        <label className="block"><span className={label}>Notes</span>
+          <textarea rows="2" className={field} value={form.notes} onChange={(e) => update({ notes: e.target.value })} placeholder="Where it is, what it was for…" />
+        </label>
+        {error && <p role="alert" className="rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">{error}</p>}
+      </form>
+    </Modal>
+  );
+}
+
+/* =========================================================================
+   2. INTERROGATION MODAL (item detail)
+   ========================================================================= */
+
+function InterrogationModal({ item, onClose, onEaten, onWasted, onFreeze, onAddToList, onEdit, onDelete, onFindRecipes, onList }) {
+  if (!item) return null;
+  const s = getStatus(item);
+  const m = STATUS[s];
+  const d = daysLeft(item);
+  const action = suggestAction(item);
+  const cat = catMeta(item.category);
+
+  return (
+    <Modal open onClose={onClose} kicker={`Case file ${caseNo(item.id)} · Interrogation`} title={item.name}>
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusBadge item={item} size="lg" />
+        {item.isLeftover && <span className="rounded-full bg-violet-500/20 px-2 py-0.5 font-mono text-xs uppercase text-violet-200">Leftover · priority</span>}
+        {item.frozen && <span className="rounded-full bg-sky-500/20 px-2 py-0.5 font-mono text-xs uppercase text-sky-200">Frozen</span>}
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <p className={`font-mono text-3xl font-semibold ${m.text}`}>{d < 0 ? `+${-d}` : d}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">{d < 0 ? 'days overdue' : d === 1 ? 'day left' : 'days left'}</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <p className="font-mono text-sm text-slate-200">{fmtDate(item.expiryDate)}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">expires</p>
+        </div>
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+          <p className="font-mono text-sm text-slate-200">{item.quantity} {item.unit}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">quantity</p>
+        </div>
+      </div>
+
+      <div className={`mt-4 rounded-xl border p-4 ${m.chip}`}>
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] opacity-80">Detective's verdict</p>
+        <p className="mt-1 text-lg font-semibold text-slate-50"><span aria-hidden="true">{action.icon}</span> {action.label}</p>
+        <p className="mt-1 text-sm text-slate-200">{action.reason}</p>
+      </div>
+
+      <div className="notebook mt-4 rounded-r-lg px-4 py-1 font-mono text-sm text-slate-300">
+        <p>Category: {cat.emoji} {item.category}</p>
+        <p>Logged: {fmtDate(item.addedDate)}</p>
+        <p>Est. value: {euro(cat.price)} <span className="text-slate-500">(simulated)</span></p>
+        <p>Notes: {item.notes ? item.notes : <span className="text-slate-500">none on file</span>}</p>
+      </div>
+
+      <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Close the case</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Btn variant="success" onClick={() => onEaten(item)} disabled={s === 'expired'} title={s === 'expired' ? 'Expired items can’t be rescued' : ''}>✅ Mark eaten</Btn>
+        <Btn variant="danger" onClick={() => onWasted(item)}>🪦 Mark wasted</Btn>
+        <Btn variant="ice" onClick={() => onFreeze(item)} disabled={item.frozen || s === 'expired'}>🧊 {item.frozen ? 'In the freezer' : 'Freeze (+30 days)'}</Btn>
+        <Btn onClick={() => onAddToList(item)} disabled={onList}>🛒 {onList ? 'On shopping list' : 'Add to list'}</Btn>
+      </div>
+      {s !== 'expired' && (
+        <Btn variant="ghost" className="mt-2 w-full border border-dashed border-slate-700" onClick={() => onFindRecipes(item)}>🍳 Find recipes that use this</Btn>
+      )}
+      <div className="mt-4 flex justify-between border-t border-slate-800 pt-3">
+        <Btn variant="ghost" onClick={() => onEdit(item)}>✏️ Edit</Btn>
+        <Btn variant="ghost" className="text-red-300" onClick={() => onDelete(item)}>Delete record</Btn>
+      </div>
+    </Modal>
+  );
+}
+
+/* =========================================================================
+   3. RECIPE SUGGESTIONS
+   ========================================================================= */
+
+function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
+  const missingOpen = recipe.missingIngredients.filter((i) => !shoppingNames.has(i.name.toLowerCase()));
+  return (
+    <li className="pop overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">Lead #{pad(index + 1)} · {recipe.time} min · {recipe.difficulty}</p>
+            <h3 className="font-noir text-xl text-slate-50">{recipe.title}</h3>
+          </div>
+          {recipe.rescues > 0 && (
+            <span className="shrink-0 rounded-full border border-yellow-400/50 bg-yellow-400/10 px-2 py-1 text-center font-mono text-[10px] uppercase leading-tight text-yellow-300">
+              Rescues<br /><span className="text-base font-semibold">{recipe.rescues}</span> at-risk
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-slate-400">{recipe.blurb}</p>
+
+        <ul className="mt-3 space-y-1.5 text-sm" aria-label="Ingredients">
+          {recipe.usesItems.map(({ ingredient, item }) => {
+            const st = getStatus(item);
+            return (
+              <li key={ingredient} className="flex items-center gap-2">
+                <span className="text-emerald-400" aria-hidden="true">✓</span>
+                <span className="text-slate-200">{ingredient}</span>
+                <span className={`ml-auto truncate font-mono text-[11px] ${STATUS[st].text}`}>
+                  {item.isLeftover ? 'leftover · ' : ''}{daysText(item).toLowerCase()}
+                </span>
+              </li>
+            );
+          })}
+          {recipe.missingIngredients.map((ing) => (
+            <li key={ing.name} className="flex items-center gap-2">
+              <span className="text-slate-500" aria-hidden="true">✗</span>
+              <span className="text-slate-400">{ing.name}</span>
+              <span className="ml-auto font-mono text-[11px] text-slate-500">{shoppingNames.has(ing.name.toLowerCase()) ? 'on list' : 'missing'}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex flex-wrap gap-2 border-t border-slate-800 bg-slate-950/50 p-3">
+        <Btn variant="primary" className="flex-1" onClick={() => onCook(recipe)}>🍳 Cook this</Btn>
+        <Btn className="flex-1" onClick={() => onAddMissing(recipe)} disabled={missingOpen.length === 0}>
+          🛒 {recipe.missingIngredients.length === 0 ? 'Nothing missing' : missingOpen.length === 0 ? 'Missing items on list' : `Add missing (${missingOpen.length})`}
+        </Btn>
+      </div>
+    </li>
+  );
+}
+
+function Recipes({ items, shopping, focusItem, clearFocus, onCook, onAddMissing, goScene }) {
+  const shoppingNames = useMemo(() => new Set(shopping.filter((s) => !s.checked).map((s) => s.name.toLowerCase())), [shopping]);
+  const leads = useMemo(() => {
+    let list = RECIPES.map((r) => analyzeRecipe(r, items)).filter((r) => r.usesItems.length > 0);
+    if (focusItem) list = list.filter((r) => r.usesItems.some((u) => u.item.id === focusItem.id) || r.ingredients.some((ing) => matchesIngredient(focusItem, ing)));
+    return list.sort((a, b) => b.score - a.score || a.missingIngredients.length - b.missingIngredients.length);
+  }, [items, focusItem]);
+
+  return (
+    <>
+      <SectionTitle kicker="Leads" title="Recipe suggestions">
+        Ranked by how many leftovers and soon-to-expire items each one rescues. Expired items are never used.
+      </SectionTitle>
+      {focusItem && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-yellow-400/40 bg-yellow-400/10 px-3 py-2 text-sm">
+          <span>Following the trail of <strong>{focusItem.name}</strong></span>
+          <Btn variant="ghost" onClick={clearFocus} aria-label="Show all recipes">✕ Clear</Btn>
+        </div>
+      )}
+      {leads.length === 0 ? (
+        <EmptyState kind="pan" title="No leads yet."
+          action={items.length === 0 ? <Btn variant="primary" onClick={goScene}>Go to the fridge</Btn> : focusItem ? <Btn onClick={clearFocus}>Show all recipes</Btn> : null}>
+          {focusItem ? `None of our recipes use ${focusItem.name} yet.` : 'Add some evidence to the fridge and the detective will find recipes that use it.'}
+        </EmptyState>
+      ) : (
+        <ul className="space-y-3">
+          {leads.map((r, i) => <RecipeCard key={r.id} recipe={r} index={i} shoppingNames={shoppingNames} onCook={onCook} onAddMissing={onAddMissing} />)}
+        </ul>
+      )}
+      <p className="mt-4 text-center font-mono text-[11px] text-slate-500">Local dataset of {RECIPES.length} recipes · salt, pepper and oil assumed in the pantry</p>
+    </>
+  );
+}
+
+function CookModal({ recipe, onClose, onConfirm, onAddMissing }) {
+  const [checked, setChecked] = useState({});
+  useEffect(() => { if (recipe) setChecked(Object.fromEntries(recipe.usesItems.map((u) => [u.item.id, true]))); }, [recipe]);
+  if (!recipe) return null;
+  const chosen = recipe.usesItems.filter((u) => checked[u.item.id]).map((u) => u.item);
+  return (
+    <Modal open onClose={onClose} kicker="Closing the case" title={recipe.title}
+      footer={<div className="flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onClose}>Not yet</Btn>
+        <Btn variant="primary" onClick={() => onConfirm(recipe, chosen)} disabled={chosen.length === 0}>Cooked it · rescue {chosen.length}</Btn>
+      </div>}>
+      <p className="text-sm text-slate-300">Tick the items you used up. They leave the fridge and count as rescued.</p>
+      <ul className="mt-3 space-y-2">
+        {recipe.usesItems.map(({ ingredient, item }) => (
+          <li key={item.id}>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+              <input type="checkbox" className="h-4 w-4 accent-yellow-400" checked={!!checked[item.id]} onChange={(e) => setChecked((c) => ({ ...c, [item.id]: e.target.checked }))} />
+              <span className="flex-1 text-sm text-slate-100">{item.name}<span className="block font-mono text-[11px] text-slate-500">for: {ingredient}</span></span>
+              <StatusBadge item={item} />
+            </label>
+          </li>
+        ))}
+      </ul>
+      {recipe.missingIngredients.length > 0 && (
+        <div className="mt-4 rounded-lg border border-dashed border-slate-700 p-3 text-sm text-slate-400">
+          Still missing: {recipe.missingIngredients.map((i) => i.name).join(', ')}.
+          <Btn variant="ghost" className="ml-1 px-2 py-1 text-yellow-300" onClick={() => onAddMissing(recipe)}>Add to list</Btn>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+/* =========================================================================
+   4. SHOPPING LIST
+   ========================================================================= */
+
+function ShoppingList({ shopping, onAdd, onToggle, onRemove, onClearCompleted, onClearAll, toast }) {
+  const [name, setName] = useState('');
+  const [qty, setQty] = useState('1');
+  const [unit, setUnit] = useState('pcs');
+  const open = shopping.filter((s) => !s.checked);
+  const done = shopping.filter((s) => s.checked);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onAdd([{ name: name.trim(), quantity: Number(qty) || 1, unit: unit || 'pcs', source: 'Manual' }]);
+    setName(''); setQty('1');
+  };
+
+  const copy = async () => {
+    const text = open.map((s) => `- ${s.name} (${s.quantity} ${s.unit})`).join('\n');
+    try { await navigator.clipboard.writeText(text); toast('List copied to clipboard.'); }
+    catch { toast('Copy not allowed in this browser.'); }
+  };
+
+  const row = (s) => (
+    <li key={s.id} className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-2.5">
+      <input type="checkbox" id={`s-${s.id}`} className="h-5 w-5 shrink-0 accent-yellow-400" checked={s.checked} onChange={() => onToggle(s.id)} />
+      <label htmlFor={`s-${s.id}`} className="min-w-0 flex-1 cursor-pointer">
+        <span className={`block truncate text-sm ${s.checked ? 'text-slate-500 line-through' : 'text-slate-100'}`}>{s.name} <span className="font-mono text-xs text-slate-500">{s.quantity} {s.unit}</span></span>
+        <span className="block truncate font-mono text-[10px] uppercase tracking-wide text-slate-500">↳ {s.source}</span>
+      </label>
+      <button type="button" onClick={() => onRemove(s.id)} aria-label={`Remove ${s.name}`} className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-slate-200">✕</button>
+    </li>
+  );
+
+  return (
+    <>
+      <SectionTitle kicker="Supplies" title="Shopping list">
+        Missing recipe ingredients land here automatically, with a note on who sent them.
+      </SectionTitle>
+
+      <form onSubmit={submit} className="mb-4 flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+        <label className="min-w-0 flex-[3_1_10rem]"><span className="sr-only">Item name</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Add an item…" className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none" />
+        </label>
+        <label className="w-16"><span className="sr-only">Quantity</span>
+          <input type="number" min="0" step="any" value={qty} onChange={(e) => setQty(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 font-mono text-sm focus:border-yellow-400 focus:outline-none" />
+        </label>
+        <label className="w-20"><span className="sr-only">Unit</span>
+          <input list="units-s" value={unit} onChange={(e) => setUnit(e.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm focus:border-yellow-400 focus:outline-none" />
+          <datalist id="units-s">{UNITS.map((u) => <option key={u} value={u} />)}</datalist>
+        </label>
+        <Btn variant="primary" type="submit" disabled={!name.trim()}>Add</Btn>
+      </form>
+
+      {shopping.length === 0 ? (
+        <EmptyState kind="list" title="The list is clear. No loose ends.">
+          Add items above, or send missing ingredients over from a recipe.
+        </EmptyState>
+      ) : (
+        <>
+          <p className="mb-2 font-mono text-xs text-slate-400">{open.length} to buy · {done.length} done</p>
+          <ul className="space-y-2">{open.map(row)}</ul>
+          {done.length > 0 && (
+            <>
+              <p className="mb-2 mt-5 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">In the bag</p>
+              <ul className="space-y-2">{done.map(row)}</ul>
+            </>
+          )}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Btn onClick={copy} disabled={open.length === 0}>📋 Copy list</Btn>
+            <Btn onClick={onClearCompleted} disabled={done.length === 0}>Clear completed</Btn>
+            <Btn variant="danger" className="ml-auto" onClick={onClearAll}>Clear all</Btn>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/* =========================================================================
+   5. STATS / CASE CLOSED
+   ========================================================================= */
+
+function Stats({ state, onReset }) {
+  const { stats, log, items } = state;
+  const total = stats.rescued + stats.wasted;
+  const rate = total ? Math.round((stats.rescued / total) * 100) : 0;
+  const atRisk = items.filter((i) => ['critical', 'warning'].includes(getStatus(i)));
+  const atRiskValue = atRisk.reduce((s, i) => s + catMeta(i.category).price, 0);
+
+  // Encouraging, never shaming.
+  const headline = total === 0 ? 'Every detective starts somewhere. Close your first case to see your record.'
+    : rate >= 80 ? 'Outstanding detective work. Almost nothing slips past you.'
+    : rate >= 60 ? 'Solid record. Most of your food ends up on a plate, not in the bin.'
+    : rate >= 40 ? 'Good progress. A few more rescues and you’ll tip the scales.'
+    : 'Every rescued item counts. Start with tonight’s prime suspect.';
+
+  const cards = [
+    { label: 'Items rescued', value: stats.rescued, tone: 'text-emerald-300', icon: '✅' },
+    { label: 'Items wasted', value: stats.wasted, tone: 'text-zinc-300', icon: '🪦' },
+    { label: 'Est. money saved', value: euro(stats.moneySaved), tone: 'text-emerald-300', icon: '💶' },
+    { label: 'Est. money wasted', value: euro(stats.moneyWasted), tone: 'text-zinc-300', icon: '💸' },
+  ];
+
+  return (
+    <>
+      <SectionTitle kicker="Case closed" title="Your record">{headline}</SectionTitle>
+
+      <div className="grid grid-cols-2 gap-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500"><span aria-hidden="true">{c.icon}</span> {c.label}</p>
+            <p className={`mt-1 font-mono text-2xl font-semibold ${c.tone}`}>{c.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <section className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/80 p-4" aria-labelledby="rate-h">
+        <div className="flex items-baseline justify-between">
+          <h3 id="rate-h" className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Rescue rate</h3>
+          <span className="font-mono text-lg font-semibold text-emerald-300">{total ? rate + '%' : '–'}</span>
+        </div>
+        <div className="mt-2 flex h-4 overflow-hidden rounded-full bg-slate-800" role="img" aria-label={`${stats.rescued} rescued, ${stats.wasted} wasted`}>
+          {total > 0 && <div className="bg-emerald-400" style={{ width: rate + '%' }} />}
+          {total > 0 && <div className="bg-zinc-600" style={{ width: 100 - rate + '%' }} />}
+        </div>
+        <div className="mt-2 flex justify-between font-mono text-[11px] text-slate-400">
+          <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />Rescued {stats.rescued}</span>
+          <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-zinc-600" />Wasted {stats.wasted}</span>
+        </div>
+      </section>
+
+      {atRisk.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-amber-300">Open cases</p>
+          <p className="mt-1 text-sm text-slate-100">About <strong>{euro(atRiskValue)}</strong> of food ({plural(atRisk.length, 'item')}) expires in the next 3 days. Rescue it and it goes straight into your savings.</p>
+        </section>
+      )}
+
+      <section className="mt-4" aria-labelledby="log-h">
+        <h3 id="log-h" className="mb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Recent closed cases</h3>
+        {log.length === 0 ? (
+          <EmptyState kind="file" title="No cases closed yet.">Every rescue starts with one leftover. Mark an item as eaten to open your file.</EmptyState>
+        ) : (
+          <ul className="divide-y divide-slate-800 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
+            {log.slice(0, 10).map((e) => (
+              <li key={e.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+                <span aria-hidden="true">{e.outcome === 'eaten' ? '✅' : '🪦'}</span>
+                <span className="min-w-0 flex-1 truncate text-slate-200">{e.name}
+                  {e.demo && <span className="ml-2 rounded bg-slate-700 px-1 font-mono text-[9px] uppercase text-slate-300">demo</span>}
+                </span>
+                <span className="font-mono text-[11px] text-slate-500">{fmtDate(e.date)}</span>
+                <span className={`w-14 text-right font-mono text-xs ${e.outcome === 'eaten' ? 'text-emerald-300' : 'text-zinc-400'}`}>{e.outcome === 'eaten' ? '+' : '−'}{euro(e.value)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <p className="mt-3 text-xs text-slate-500">Money figures are estimates from simulated average prices per category, not real receipts.</p>
+
+      <section className="mt-6 rounded-2xl border border-dashed border-slate-700 p-4">
+        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Evidence locker admin</p>
+        <p className="mt-1 text-sm text-slate-400">Data is stored in the Python backend (SQLite database).</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Btn onClick={() => onReset('demo')}>↺ Reload demo data</Btn>
+          <Btn variant="danger" onClick={() => onReset('empty')}>Start with an empty fridge</Btn>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/* =========================================================================
+   6. PREMIUM / MONETIZATION TEASER (mock — no real payments)
+   ========================================================================= */
+
+const PLANS = [
+  { id: 'rookie', name: 'Rookie', price: '€0', period: 'forever', current: true,
+    perks: ['Unlimited fridge tracking', 'Recipe leads from your fridge', 'Shopping list', 'Waste & savings stats'] },
+  { id: 'detective', name: 'Detective', price: '€2.99', period: '/ month', note: 'or €24 / year',
+    perks: ['Everything in Rookie', 'Weekly meal planning around expiry dates', 'Personalized recipes (diet, allergies, taste)', 'Unlimited recipe library'] },
+  { id: 'agency', name: 'Household Agency', price: '€4.99', period: '/ month', note: 'up to 6 members', highlight: true,
+    perks: ['Everything in Detective', 'Household syncing across phones', 'Who-ate-what case notes', 'Opt-in grocery partner offers'] },
+];
+
+const FEATURES = [
+  { icon: '🗓️', title: 'Meal planning', text: 'A weekly plan built around what expires first, so nothing gets forgotten at the back of the fridge.' },
+  { icon: '🏠', title: 'Household syncing', text: 'One shared fridge for flatmates or family. Everyone sees the same evidence and the same shopping list.' },
+  { icon: '🧑‍🍳', title: 'Personalized recipes', text: 'Recipes tuned to your diet, allergies, skill level and the time you actually have.' },
+  { icon: '🤝', title: 'Grocery partner offers', text: 'A few carefully chosen discounts on things you already buy. Opt-in only, and your data is never sold.' },
+];
+
+function Premium({ openPaywall }) {
+  const [email, setEmail] = useState('');
+  const [err, setErr] = useState('');
+  const invite = (e) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr('Enter a valid email address.');
+    setErr('');
+    openPaywall({ reason: `Inviting ${email} to your household needs the Household Agency plan.`, plan: 'agency' });
+  };
+
+  return (
+    <>
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-yellow-400/50 bg-yellow-400/10 px-3 py-2 text-xs text-yellow-200" role="note">
+        <span aria-hidden="true">⚠️</span> Prototype preview. Prices are mock-ups and no real payments are processed.
+      </div>
+      <SectionTitle kicker="Agency edition" title="Fridge Graveyard Premium">
+        Core waste tracking stays free. Premium adds tools for planning ahead and for shared households.
+      </SectionTitle>
+
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {FEATURES.map((f) => (
+          <li key={f.title} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-2xl" aria-hidden="true">{f.icon}</span>
+              <span className="rounded-full border border-yellow-400/40 px-2 py-0.5 font-mono text-[10px] uppercase text-yellow-300">🔒 Premium</span>
+            </div>
+            <h3 className="mt-2 font-semibold text-slate-100">{f.title}</h3>
+            <p className="mt-1 text-sm text-slate-400">{f.text}</p>
+          </li>
+        ))}
+      </ul>
+
+      <h3 className="mb-3 mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Plans (mock pricing)</h3>
+      <ul className="grid gap-3 sm:grid-cols-3">
+        {PLANS.map((p) => (
+          <li key={p.id} className={`relative flex flex-col rounded-2xl border p-4 ${p.highlight ? 'border-yellow-400 bg-yellow-400/5' : 'border-slate-800 bg-slate-900/80'}`}>
+            {p.highlight && <span className="absolute -top-2.5 right-3 rounded-full bg-yellow-400 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase text-slate-950">Best for flatshares</span>}
+            <p className="font-noir text-lg text-slate-50">{p.name}</p>
+            <p className="mt-1"><span className="font-mono text-2xl font-semibold text-slate-50">{p.price}</span> <span className="text-sm text-slate-400">{p.period}</span></p>
+            {p.note && <p className="font-mono text-[11px] text-slate-500">{p.note}</p>}
+            <ul className="mt-3 flex-1 space-y-1.5 text-sm text-slate-300">
+              {p.perks.map((perk) => <li key={perk} className="flex gap-2"><span className="text-emerald-400" aria-hidden="true">✓</span>{perk}</li>)}
+            </ul>
+            {p.current
+              ? <Btn className="mt-4" disabled>Current plan</Btn>
+              : <Btn variant={p.highlight ? 'primary' : 'secondary'} className="mt-4" onClick={() => openPaywall({ reason: `You picked the ${p.name} plan.`, plan: p.id })}>Choose {p.name}</Btn>}
+          </li>
+        ))}
+      </ul>
+
+      <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/80 p-4" aria-labelledby="invite-h">
+        <h3 id="invite-h" className="font-semibold text-slate-100">🏠 Invite your household</h3>
+        <p className="mt-1 text-sm text-slate-400">Share one fridge with flatmates or family. Everyone gets the same alerts and list.</p>
+        <form onSubmit={invite} className="mt-3 flex flex-wrap gap-2" noValidate>
+          <label className="min-w-0 flex-[1_1_12rem]"><span className="sr-only">Email address</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="flatmate@example.com"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none" />
+          </label>
+          <Btn variant="primary" type="submit">Send invite</Btn>
+        </form>
+        {err && <p role="alert" className="mt-2 text-sm text-red-300">{err}</p>}
+      </section>
+    </>
+  );
+}
+
+function PaywallModal({ paywall, onClose, onStartTrial }) {
+  if (!paywall) return null;
+  const plan = PLANS.find((p) => p.id === paywall.plan) || PLANS[2];
+  return (
+    <Modal open onClose={onClose} kicker="Restricted area · Premium" title={`Unlock ${plan.name}`}
+      footer={<div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <Btn variant="ghost" onClick={onClose}>Maybe later</Btn>
+        <Btn variant="primary" onClick={onStartTrial} data-autofocus>Start 14-day free trial (mock)</Btn>
+      </div>}>
+      <div className="text-center">
+        <p className="text-5xl" aria-hidden="true">🔒</p>
+        <p className="mt-3 text-slate-200">{paywall.reason}</p>
+        <p className="mt-3"><span className="font-mono text-3xl font-semibold text-slate-50">{plan.price}</span> <span className="text-slate-400">{plan.period}</span></p>
+      </div>
+      <ul className="mt-4 space-y-1.5 text-sm text-slate-300">
+        {plan.perks.map((perk) => <li key={perk} className="flex gap-2"><span className="text-emerald-400" aria-hidden="true">✓</span>{perk}</li>)}
+      </ul>
+      <p className="mt-4 rounded-lg border border-yellow-400/40 bg-yellow-400/10 px-3 py-2 text-xs text-yellow-200">
+        This is a prototype. No payment details are collected, nothing is charged, and no invites are sent.
+      </p>
+    </Modal>
+  );
+}
+
+/* =========================================================================
+   APP SHELL
+   ========================================================================= */
+
+const TABS = [
+  { id: 'scene', label: 'Fridge', icon: '🔎' },
+  { id: 'recipes', label: 'Recipes', icon: '🍳' },
+  { id: 'list', label: 'List', icon: '🛒' },
+  { id: 'stats', label: 'Stats', icon: '📁' },
+  { id: 'premium', label: 'Premium', icon: '⭐' },
+];
+
+function App({ initialState }) {
+  const [state, setState] = useState(initialState);
+  const [tab, setTab] = useState('scene');
+  const [detailId, setDetailId] = useState(null);
+  const [form, setForm] = useState({ open: false, initial: null });
+  const [cooking, setCooking] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+  const [paywall, setPaywall] = useState(null);
+  const [focusId, setFocusId] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
+  const toastTimer = useRef(null);
+
+  // Persist every change to the backend (debounced so rapid edits send one request).
+  const saveTimer = useRef(null);
+  useEffect(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveState(state).catch(() => toast('Could not reach the server. Changes not saved.'));
+    }, 300);
+  }, [state]);
+
+  const toast = (msg) => {
+    setToastMsg(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMsg(''), 3200);
+  };
+
+  const { items, shopping } = state;
+  const detailItem = items.find((i) => i.id === detailId) || null;
+  const focusItem = items.find((i) => i.id === focusId) || null;
+  const openCount = shopping.filter((s) => !s.checked).length;
+  const goTab = (t) => { setTab(t); window.scrollTo({ top: 0 }); };
+
+  /* ----- item actions ----- */
+  const saveItem = (data) => {
+    setState((s) => {
+      if (data.id) return { ...s, items: s.items.map((i) => (i.id === data.id ? { ...i, ...data } : i)) };
+      return { ...s, nextId: s.nextId + 1, items: [...s.items, { ...data, id: s.nextId, frozen: false }] };
+    });
+    toast(data.id ? 'Case file updated.' : `${data.name} logged as evidence.`);
+    setForm({ open: false, initial: null });
+  };
+
+  // Close a case: the item leaves the fridge and counts as rescued (eaten) or wasted.
+  // Assumption: the whole item is consumed; partial portions are out of scope for the prototype.
+  const closeCases = (list, outcome) => {
+    const ids = new Set(list.map((i) => i.id));
+    setState((s) => {
+      const entries = list.map((i) => ({ id: uid(), name: i.name, outcome, category: i.category, date: todayISO(), value: catMeta(i.category).price }));
+      const value = entries.reduce((a, e) => a + e.value, 0);
+      const stats = { ...s.stats };
+      if (outcome === 'eaten') { stats.rescued += list.length; stats.moneySaved += value; }
+      else { stats.wasted += list.length; stats.moneyWasted += value; }
+      return { ...s, items: s.items.filter((i) => !ids.has(i.id)), stats, log: [...entries, ...s.log].slice(0, 100) };
+    });
+  };
+
+  const markEaten = (item) => { closeCases([item], 'eaten'); setDetailId(null); toast(`Case closed: ${item.name} rescued. Nice work, detective.`); };
+  const markWasted = (item) => { closeCases([item], 'wasted'); setDetailId(null); toast(`${item.name} laid to rest. It happens. On to the next case.`); };
+
+  // Freezing buys ~30 days (simplification; real freezer life varies by food).
+  const freezeItem = (item) => {
+    setState((s) => ({ ...s, items: s.items.map((i) => i.id === item.id
+      ? { ...i, frozen: true, expiryDate: addDays(todayISO(), 30), notes: (i.notes ? i.notes + ' ' : '') + `Frozen on ${fmtDate(todayISO())}.` }
+      : i) }));
+    toast(`${item.name} is on ice. 30 more days on the clock.`);
+  };
+
+  const deleteItem = (item) => setConfirm({
+    title: `Delete ${item.name}?`, body: 'This removes the record without counting it as eaten or wasted.', danger: true, confirmLabel: 'Delete',
+    onConfirm: () => { setState((s) => ({ ...s, items: s.items.filter((i) => i.id !== item.id) })); setDetailId(null); toast('Record deleted.'); },
+  });
+
+  /* ----- shopping actions ----- */
+  const addShopping = (entries) => {
+    let added = 0;
+    setState((s) => {
+      const existing = new Set(s.shopping.filter((x) => !x.checked).map((x) => x.name.toLowerCase()));
+      const fresh = [];
+      entries.forEach((e) => {
+        if (existing.has(e.name.toLowerCase())) return; // no duplicates of open entries
+        existing.add(e.name.toLowerCase());
+        fresh.push({ id: uid(), checked: false, ...e });
+      });
+      added = fresh.length;
+      return { ...s, shopping: [...fresh, ...s.shopping] };
+    });
+    return added;
+  };
+
+  const addItemToList = (item) => {
+    addShopping([{ name: item.name, quantity: item.quantity, unit: item.unit, source: `Item: ${item.name} ${caseNo(item.id)}` }]);
+    toast(`${item.name} added to the shopping list.`);
+  };
+
+  const addMissing = (recipe) => {
+    addShopping(recipe.missingIngredients.map((ing) => ({ name: ing.name, quantity: ing.qty, unit: ing.unit, source: `Recipe: ${recipe.title}` })));
+    toast(`Missing ingredients for ${recipe.title} added to the list.`);
+  };
+
+  const cookConfirm = (recipe, used) => {
+    closeCases(used, 'eaten');
+    setCooking(null);
+    toast(`${recipe.title} served. ${plural(used.length, 'item')} rescued.`);
+  };
+
+  const resetData = (mode) => setConfirm({
+    title: mode === 'demo' ? 'Reload demo data?' : 'Start with an empty fridge?',
+    body: 'This replaces everything stored in this browser: fridge, shopping list and stats.', danger: mode === 'empty',
+    confirmLabel: mode === 'demo' ? 'Reload demo' : 'Empty it',
+    onConfirm: () => { setState(mode === 'demo' ? makeSeed() : makeEmpty()); setFocusId(null); toast(mode === 'demo' ? 'Demo case files restored.' : 'Fridge cleared. Fresh start.'); },
+  });
+
+  const onListNames = new Set(shopping.filter((s) => !s.checked).map((s) => s.name.toLowerCase()));
+
+  return (
+    <div className="min-h-screen pb-28">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#0b0f14]/90 backdrop-blur">
+        <div className="caution-tape h-2" aria-hidden="true" />
+        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-xl" aria-hidden="true">🕵️</div>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-noir text-xl leading-tight text-slate-50">The Fridge Graveyard</h1>
+            <p className="truncate font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Food-waste detective unit</p>
+          </div>
+          <span className="shrink-0 rounded border border-yellow-400/50 px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight text-yellow-300" title="All data in this prototype is simulated">
+            Prototype<br />{state.demo ? 'Demo data' : 'Local data'}
+          </span>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 pt-5">
+        {tab === 'scene' && <Dashboard items={items} onOpen={setDetailId} onAdd={() => setForm({ open: true, initial: null })} goRecipes={() => { setFocusId(null); goTab('recipes'); }} />}
+        {tab === 'recipes' && <Recipes items={items} shopping={shopping} focusItem={focusItem} clearFocus={() => setFocusId(null)} onCook={setCooking} onAddMissing={addMissing} goScene={() => goTab('scene')} />}
+        {tab === 'list' && <ShoppingList shopping={shopping} toast={toast} onAdd={(e) => { addShopping(e); toast(`${e[0].name} added.`); }}
+          onToggle={(id) => setState((s) => ({ ...s, shopping: s.shopping.map((x) => x.id === id ? { ...x, checked: !x.checked } : x) }))}
+          onRemove={(id) => setState((s) => ({ ...s, shopping: s.shopping.filter((x) => x.id !== id) }))}
+          onClearCompleted={() => { setState((s) => ({ ...s, shopping: s.shopping.filter((x) => !x.checked) })); toast('Completed items cleared.'); }}
+          onClearAll={() => setConfirm({ title: 'Clear the whole list?', body: 'Every item on the shopping list will be removed.', danger: true, confirmLabel: 'Clear all',
+            onConfirm: () => { setState((s) => ({ ...s, shopping: [] })); toast('Shopping list cleared.'); } })} />}
+        {tab === 'stats' && <Stats state={state} onReset={resetData} />}
+        {tab === 'premium' && <Premium openPaywall={setPaywall} />}
+
+        <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
+          Prototype · simulated data · stored only in this browser
+        </footer>
+      </main>
+
+      {/* Floating add button (fridge tab only) */}
+      {tab === 'scene' && items.length > 0 && (
+        <button type="button" onClick={() => setForm({ open: true, initial: null })}
+          className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-black/50 hover:bg-yellow-300 sm:right-[max(1rem,calc(50%-24rem+1rem))]">
+          <span aria-hidden="true" className="text-lg leading-none">+</span> Add evidence
+        </button>
+      )}
+
+      {/* Bottom navigation */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800 bg-[#0b0f14]/95 backdrop-blur" aria-label="Main" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <ul className="mx-auto grid max-w-3xl grid-cols-5">
+          {TABS.map((t) => (
+            <li key={t.id}>
+              <button type="button" onClick={() => goTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}
+                className={`relative flex w-full flex-col items-center gap-0.5 py-2.5 text-[11px] transition ${tab === t.id ? 'text-yellow-300' : 'text-slate-400 hover:text-slate-200'}`}>
+                {tab === t.id && <span className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-yellow-400" aria-hidden="true" />}
+                <span className="text-lg leading-none" aria-hidden="true">{t.icon}</span>
+                <span className="font-medium">{t.label}</span>
+                {t.id === 'list' && openCount > 0 && (
+                  <span className="absolute right-[calc(50%-1.4rem)] top-1 min-w-[1.1rem] rounded-full bg-red-500 px-1 font-mono text-[10px] leading-[1.1rem] text-white" aria-label={`${openCount} items to buy`}>{openCount}</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Modals */}
+      <InterrogationModal item={detailItem} onClose={() => setDetailId(null)}
+        onEaten={markEaten} onWasted={markWasted} onFreeze={freezeItem} onAddToList={addItemToList}
+        onList={detailItem ? onListNames.has(detailItem.name.toLowerCase()) : false}
+        onEdit={(item) => { setDetailId(null); setForm({ open: true, initial: item }); }}
+        onDelete={deleteItem}
+        onFindRecipes={(item) => { setDetailId(null); setFocusId(item.id); goTab('recipes'); }} />
+      <ItemFormModal open={form.open} initial={form.initial} onClose={() => setForm({ open: false, initial: null })} onSave={saveItem} />
+      <CookModal recipe={cooking} onClose={() => setCooking(null)} onConfirm={cookConfirm} onAddMissing={(r) => addMissing(r)} />
+      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)}
+        onStartTrial={() => { setPaywall(null); toast('Prototype: no payment taken and no invite sent.'); }} />
+      <ConfirmModal confirm={confirm} onClose={() => setConfirm(null)} />
+
+      {/* Toast */}
+      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-40 z-[60] flex justify-center px-4">
+        {toastMsg && <div className="pop pointer-events-auto max-w-md rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-slate-100 shadow-xl">{toastMsg}</div>}
+      </div>
+    </div>
+  );
+}
+
+// Fetch saved state from the backend first, then mount the app.
+function Root() {
+  const [initial, setInitial] = useState(null);
+  useEffect(() => { loadState().then(setInitial); }, []);
+  if (!initial) return <div className="min-h-screen grid place-items-center text-slate-400 font-mono">Opening the case files…</div>;
+  return <App initialState={initial} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+</script>
+</body>
+</html>
