@@ -203,7 +203,7 @@ select {
    ========================================================================= */
 
 /* Main cards: soft pastel rather than dark slate */
-body [class*="bg-black"],
+body [class*="bg-black"]:not([class*="bg-black/"]),
 body [class*="bg-slate-950"],
 body [class*="bg-slate-900"] {
   background-color: var(--fg-surface) !important;
@@ -1008,7 +1008,7 @@ body #root .fixed[aria-live="polite"] > div {
    ============================================================ */
 :root { color-scheme:light; --fg-bg:#d6bdf9; --fg-surface:#fffdf7; --fg-surface-soft:#f4effd; --fg-surface-hover:#eee5fc; --fg-surface-raised:#e9def9; --fg-ink:#493b61; --fg-muted:#786c8b; --fg-subtle:#9488a2; --fg-primary:#dded69; --fg-primary-hover:#cfe44c; --fg-yellow:#e6f16c; --fg-yellow-soft:#f4f9cc; --fg-green:#6c974b; --fg-green-soft:#e8f3cf; --fg-border:#e5daf1; --fg-border-strong:#c9b5e3; --fg-shadow:0 8px 22px rgba(80,53,120,.09); --fg-shadow-hover:0 16px 30px rgba(80,53,120,.15); }
 html {background:#d6bdf9!important} body {background:radial-gradient(circle at 6% 10%,#e5d5ff 0,transparent 35%),radial-gradient(circle at 92% 38%,#c8acf6 0,transparent 40%),#d6bdf9!important;color:#493b61!important}
-body [class*="bg-slate-900"],body [class*="bg-slate-950"],body [class*="bg-black"] {background-color:#fffdf7!important;color:#493b61!important}
+body [class*="bg-slate-900"],body [class*="bg-slate-950"],body [class*="bg-black"]:not([class*="bg-black/"]) {background-color:#fffdf7!important;color:#493b61!important}
 body [class*="bg-slate-800"] {background-color:#f1eafb!important;color:#493b61!important}
 body [class*="bg-slate-700"] {background-color:#e8ddf8!important;color:#493b61!important}
 body [class*="from-slate-900"],body [class*="from-slate-950"] {--tw-gradient-from:#fffdf7!important;--tw-gradient-to:#fffdf7!important}
@@ -1041,6 +1041,7 @@ body > #root button.fixed[class*="bottom-24"]{background:#e6f16f!important;borde
 .recipe-card{background:#fffdf7!important;border-color:#e9ddf8!important}.recipe-card:nth-child(3n+2){background:#f3edff!important}.recipe-card:nth-child(3n+3){background:#f2f8e4!important}.recipe-rescue-badge{background:#e6f16f!important;color:#53623b!important}.rescue-celebration-card{background:#fffdf7!important;border-color:#c7abe9!important}.rescue-title{color:#7555a4!important}
 @keyframes fg-wiggle{0%,90%,100%{transform:rotate(0)}93%{transform:rotate(-13deg)}97%{transform:rotate(12deg)}}@keyframes fg-twinkle{0%,100%{transform:scale(.8);opacity:.45}50%{transform:scale(1.3);opacity:1}}@keyframes fg-bubble{0%,100%{transform:translateY(0) rotate(3deg)}50%{transform:translateY(-6px) rotate(-3deg)}}@keyframes fg-food-bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6px) rotate(3deg)}}@keyframes fg-spin{to{transform:rotate(360deg)}}
 @media(max-width:650px){.fg-main{padding-top:20px!important}.fg-hero{grid-template-columns:1fr 100px;padding:20px;min-height:210px}.fg-hero-character .food-mascot{transform:scale(.8)}.fg-character-halo{width:110px;height:110px}.fg-hero-bubble{font-size:9px;right:-12px}.fg-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fg-stat{min-height:105px}.fg-evidence-section{padding:16px}.fg-food-grid{grid-template-columns:1fr}.fg-food-card-button{min-height:142px}.fg-evidence-heading{align-items:flex-start}.fg-inline-add{padding:9px 11px}.fg-bottom-promo{flex-wrap:wrap}.fg-bottom-promo button{width:100%}}@media(max-width:390px){.fg-hero{grid-template-columns:1fr}.fg-hero-character{display:none}.fg-home-heading h2{font-size:27px}.fg-food-art{width:62px}.fg-food-side{max-width:90px}.fg-food-name{font-size:16px}}
+body [class*="text-sky-300"]{color:#3E6A80!important}body [class*="border-sky-500"]{border-color:#9DC3D6!important}
 @media(prefers-reduced-motion:reduce){.fg-hero-decoration,.fg-heading-icon,.fg-tip-character,.fg-food-emoji,.fg-hero-bubble,.fg-character-halo{animation:none!important}}
 
 </style>
@@ -1606,7 +1607,7 @@ function EvidenceCard({ item, onOpen }) {
       <button type="button" onClick={() => onOpen(item.id)} className="fg-food-card-button" aria-label={`${item.name}, ${STATUS[s].label}, ${daysText(item)}. ${action.label}. Open case file.`}>
         <span className="fg-food-art" aria-hidden="true">{food.type ? <FoodMascot type={food.type} mood={s === 'fresh' ? 'happy' : 'worried'} size={66} /> : <span className="fg-food-emoji">{food.emoji}</span>}</span>
         <span className="fg-food-copy">
-          <span className="fg-food-kicker">CASE {caseNo(item.id)} {item.isLeftover ? '· LEFTOVER' : ''}</span>
+          <span className="fg-food-kicker">CASE {caseNo(item.id)}{item.isLeftover ? ' · LEFTOVER' : ''}{item.frozen ? ' · 🧊 FROZEN' : ''}</span>
           <strong className="fg-food-name">{item.name}</strong>
           <span className="fg-food-detail">{item.quantity} {item.unit} · {item.category}</span>
           <span className="fg-food-speech">💬 {food.speech}</span>
@@ -1625,98 +1626,6 @@ const FILTERS = [
   { id: 'fresh', label: 'Fresh' },
   { id: 'expired', label: 'Deceased' },
 ];
-
-
-function BroccoliMascot({ mood = "worried", size = 110 }) {
-  const isHappy = mood === "happy";
-
-  return (
-    <div
-      className={`fg-broccoli ${isHappy ? "is-happy" : "is-worried"}`}
-      style={{ width: size, height: size }}
-      aria-label={isHappy ? "Happy broccoli" : "Worried broccoli"}
-      role="img"
-    >
-      <svg viewBox="0 0 120 120" width="100%" height="100%">
-        {/* Little feet */}
-        <path d="M43 96 L38 105 Q35 110 44 110 L53 106" />
-        <path d="M75 96 L80 105 Q85 110 91 106 L83 99" />
-
-        {/* Stem */}
-        <path d="M48 75 Q47 91 43 99 Q60 108 79 98 Q72 86 73 73"
-          fill="#A9BDA6" stroke="#304B3D" strokeWidth="2.5"
-          strokeLinejoin="round" />
-
-        {/* Broccoli florets */}
-        <g fill="#8FAF9B" stroke="#304B3D" strokeWidth="2.5">
-          <circle cx="38" cy="46" r="18" />
-          <circle cx="53" cy="31" r="20" />
-          <circle cx="73" cy="34" r="21" />
-          <circle cx="88" cy="49" r="17" />
-          <circle cx="61" cy="49" r="24" />
-        </g>
-
-        {/* Floret details */}
-        <g fill="#B9D0B7">
-          <circle cx="47" cy="25" r="5" />
-          <circle cx="70" cy="22" r="5" />
-          <circle cx="87" cy="43" r="4" />
-          <circle cx="34" cy="43" r="4" />
-        </g>
-
-        {/* Arms */}
-        <g fill="none" stroke="#A9BDA6" strokeWidth="5"
-          strokeLinecap="round">
-          <path d="M39 69 Q25 72 24 84" />
-          <path d="M83 69 Q96 73 98 83" />
-        </g>
-
-        {/* Face */}
-        <g fill="#302839">
-          {isHappy ? (
-            <>
-              <path d="M47 55 Q51 62 55 55" fill="none"
-                stroke="#302839" strokeWidth="2.5" />
-              <path d="M68 55 Q72 62 76 55" fill="none"
-                stroke="#302839" strokeWidth="2.5" />
-              <path d="M56 69 Q62 76 69 69" fill="none"
-                stroke="#302839" strokeWidth="2.5"
-                strokeLinecap="round" />
-            </>
-          ) : (
-            <>
-              <ellipse cx="51" cy="55" rx="3.5" ry="5" />
-              <ellipse cx="72" cy="55" rx="3.5" ry="5" />
-              <path d="M57 70 Q62 65 68 70" fill="none"
-                stroke="#302839" strokeWidth="2.5"
-                strokeLinecap="round" />
-            </>
-          )}
-        </g>
-
-        {/* Blush */}
-        <g fill="#E9A9A0" opacity=".85">
-          <ellipse cx="42" cy="66" rx="6" ry="3.5" />
-          <ellipse cx="81" cy="66" rx="6" ry="3.5" />
-        </g>
-
-        {/* Worried tear */}
-        {!isHappy && (
-          <path className="fg-broccoli-tear"
-            d="M79 61 Q72 72 78 76 Q84 77 84 71 Z"
-            fill="#A9C9DE" />
-        )}
-
-        {/* Happy sparkle */}
-        {isHappy && (
-          <g fill="#F0D58C">
-            <path d="M94 20 L97 28 L105 31 L97 34 L94 42 L91 34 L83 31 L91 28 Z" />
-          </g>
-        )}
-      </svg>
-    </div>
-  );
-}
 
 
 function Dashboard({ items, onOpen, onAdd, goRecipes }) {
@@ -1742,7 +1651,7 @@ function Dashboard({ items, onOpen, onAdd, goRecipes }) {
       <div className="fg-home-heading"><div><div className="fg-eyebrow">✦ YOUR LITTLE FOOD RESCUE WORLD ✦</div><h2>Welcome to Rescue HQ <span className="fg-heading-sparkle">✿</span></h2><p>Every ingredient has a story. Let's give it a happy ending!</p></div><span className="fg-heading-icon">🔍</span></div>
       <section className="fg-hero" aria-label="Today's rescue mission">
         <div className="fg-hero-decoration fg-star-one">✦</div><div className="fg-hero-decoration fg-star-two">✳</div>
-        <div className="fg-hero-copy"><span className="fg-hero-eyebrow">🎯 TODAY'S RESCUE MISSION</span><h3>{prime ? `Psst... ${prime.name} needs you!` : 'The fridge is feeling fabulous!'}</h3><p>{prime ? `${daysText(prime)}. Your food detective needs a helping hand!` : 'No urgent suspects today. Keep up the good work!'}</p><div className="fg-hero-actions"><button type="button" onClick={prime ? () => onOpen(prime.id) : onAdd}>🔎 {prime ? 'Save this food' : 'Add food'}</button><button type="button" onClick={goRecipes}>🍳 Find recipes</button></div></div>
+        <div className="fg-hero-copy"><span className="fg-hero-eyebrow">🎯 TODAY'S RESCUE MISSION</span><h3>{prime ? `Psst... ${prime.name} needs you!` : (items.length ? 'The fridge is feeling fabulous!' : 'Your fridge is empty!')}</h3><p>{prime ? `${daysText(prime)}. Your food detective needs a helping hand!` : (items.length ? 'No urgent suspects today. Keep up the good work!' : 'Add what is in your fridge and the detective will tell you what to eat first.')}</p><div className="fg-hero-actions"><button type="button" onClick={prime ? () => onOpen(prime.id) : onAdd}>🔎 {prime ? 'Save this food' : 'Add food'}</button><button type="button" onClick={goRecipes}>🍳 Find recipes</button></div></div>
         <div className="fg-hero-character"><div className="fg-character-halo"></div><FoodMascot type={prime && prime.name.toLowerCase().includes('tomato') ? 'tomato' : prime && prime.name.toLowerCase().includes('spinach') ? 'spinach' : 'broccoli'} mood={prime ? 'worried' : 'happy'} size={132}/><span className="fg-hero-bubble">{prime ? 'Help meee! ♡' : 'Yay! ♡'}</span></div>
       </section>
       <div className="fg-stats-grid"><div className="fg-stat fg-stat-purple"><span>🧺</span><strong>{counts.all}</strong><small>In your fridge</small></div><div className="fg-stat fg-stat-pink"><span>⏰</span><strong>{counts.critical + counts.warning}</strong><small>Need rescuing</small></div><div className="fg-stat fg-stat-green"><span>🌱</span><strong>{counts.fresh}</strong><small>Happy & fresh</small></div><div className="fg-stat fg-stat-yellow"><span>🍱</span><strong>{counts.leftover}</strong><small>Leftover buddies</small></div></div>
@@ -1917,12 +1826,9 @@ function FoodMascot({
   size = 64,
   showMessage = false
 }) {
-  const messages = {
-    broccoli: 'PLEASE USE ME!',
-    spinach: 'Umm... remember me?',
-    tomato: 'I SURVIVED!',
-    ghost: 'Boo! Food waste!'
-  };
+  const messages = mood === 'happy'
+    ? { broccoli: 'Saved! Thank you!', spinach: 'Fresh again!', tomato: 'I SURVIVED!', ghost: 'Boo! No waste!' }
+    : { broccoli: 'PLEASE USE ME!', spinach: 'Umm... remember me?', tomato: 'Cook me soon!', ghost: 'Boo! Food waste!' };
 
   const colours = {
     broccoli: { main: '#83A878', dark: '#527A50', light: '#A9C69A' },
@@ -2618,7 +2524,7 @@ function App({ initialState }) {
 
   const resetData = (mode) => setConfirm({
     title: mode === 'demo' ? 'Reload demo data?' : 'Start with an empty fridge?',
-    body: 'This replaces everything stored in this browser: fridge, shopping list and stats.', danger: mode === 'empty',
+    body: 'This replaces everything saved for this app: fridge, shopping list and stats.', danger: mode === 'empty',
     confirmLabel: mode === 'demo' ? 'Reload demo' : 'Empty it',
     onConfirm: () => { setState(mode === 'demo' ? makeSeed() : makeEmpty()); setFocusId(null); toast(mode === 'demo' ? 'Demo case files restored.' : 'Fridge cleared. Fresh start.'); },
   });
@@ -2636,7 +2542,7 @@ function App({ initialState }) {
             <h1 className="truncate font-noir text-xl leading-tight text-slate-50">The Fridge Graveyard</h1>
             <p className="truncate font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">YOUR COZY FOOD RESCUE CLUB</p>
           </div>
-          <span className="shrink-0 rounded border border-yellow-400/50 px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight text-yellow-300" title="All data in this prototype is simulated">
+          <span className="shrink-0 rounded border border-yellow-400/50 px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight text-yellow-300" title="Sample data and prices are simulated">
             Prototype<br />{state.demo ? 'Demo data' : 'Local data'}
           </span>
         </div>
@@ -2655,14 +2561,14 @@ function App({ initialState }) {
         {tab === 'premium' && <Premium openPaywall={setPaywall} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
-          Prototype · simulated data · stored only in this browser
+          Prototype · simulated data · saved by the local server
         </footer>
       </main>
 
       {/* Floating add button (fridge tab only) */}
       {tab === 'scene' && items.length > 0 && (
         <button type="button" onClick={() => setForm({ open: true, initial: null })}
-          className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-black/50 hover:bg-yellow-300 sm:right-[max(1rem,calc(50%-24rem+1rem))]">
+          className="fixed bottom-24 right-4 z-30 flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-slate-950 shadow-lg shadow-black/50 hover:bg-yellow-300 sm:right-[max(1rem,calc(50%-32rem+1rem))]">
           <span aria-hidden="true" className="text-lg leading-none">+</span> Add evidence
         </button>
       )}

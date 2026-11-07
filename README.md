@@ -22,8 +22,12 @@ requirements.txt      Python dependencies
 
 ## Run it
 
+Requires **Python 3.10 or newer** (FastAPI 0.162 and Uvicorn 0.54 no longer support 3.9).
+Check with `python3 --version`. On macOS the built-in `python3` is 3.9, so use a newer one,
+for example Homebrew's: `brew install python@3.12`, then create the venv with `python3.12`.
+
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn backend.main:app --reload
