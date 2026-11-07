@@ -1015,7 +1015,9 @@ body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
 .fg-recipe-rescue-message span{font-size:11px;font-weight:600}
 @media(max-width:650px){.fg-recipe-mascot-avatar{width:50px;height:50px}.fg-recipe-mascot-emoji{font-size:31px}.fg-recipe-rescue-message strong{max-width:115px}}
 
-/* Extras: meal planner, household, feature cards */
+/* Premium: meal planner, household, feature cards */
+.fg-premium-badge{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:99px;background:#fff3c8;border:1px solid #efdc9a;color:#7a5f1c;font:700 10px 'Fredoka',sans-serif;letter-spacing:.02em;vertical-align:middle;text-transform:none}
+.fg-extra-card>.fg-premium-badge{margin:8px 0 0;font-size:10px}
 .fg-planner,.fg-household,.fg-extra-card{background:#fffdf7;border:2px solid #f2eafc;border-radius:28px;box-shadow:0 9px 24px rgba(77,49,121,.09);padding:22px;color:#51436a;margin-bottom:20px}
 .fg-planner h3,.fg-household h3{font:800 clamp(22px,4vw,28px)/1.15 'Baloo 2',sans-serif;color:#564078;margin:4px 0}
 .fg-planner-sub,.fg-household>p{font-size:13px;color:#7d6d8f}
@@ -2317,7 +2319,7 @@ function FoodGoals({ goals, onChange, items, shopping, onAddShopping }) {
     .filter(g => !(shopping || []).some(x => !x.checked && x.name.toLowerCase() === g.name.toLowerCase()))
     .slice(0, 8);
   return <details className="mb-5 rounded-3xl border-2 border-purple-100 bg-[#fffdf7] p-5 text-[#493b61]">
-    <summary className="cursor-pointer font-display text-xl font-bold">🥗 My food goals & preferences</summary>
+    <summary className="cursor-pointer font-display text-xl font-bold">🥗 My food goals & preferences <span className="fg-premium-badge">⭐ Premium</span></summary>
     <p className="my-3 text-sm">Optional preferences. Food rescue remains the priority. This is a prototype: recipes are not certified allergen-free or halal, and any nutrition figures are rough estimates.</p>
     <label className="block text-sm font-bold">Eating style<select className="mt-1 block w-full p-2" value={draft.diet} onChange={e=>set('diet',e.target.value)}>
       {['any','vegetarian','vegan','pescatarian','halal'].map(d=><option key={d} value={d}>{d==='any'?'No restriction':d[0].toUpperCase()+d.slice(1)}</option>)}
@@ -2704,7 +2706,7 @@ function Stats({ state, onReset }) {
 }
 
 /* =========================================================================
-   6. EXTRAS (all free): weekly meal planner, household syncing, who-ate-what
+   6. PREMIUM (unlocked for free): weekly meal planner, household syncing, who-ate-what
    ========================================================================= */
 
 // Plan the next 7 dinners around expiry dates. Greedy: each day picks the recipe that rescues
@@ -2760,7 +2762,7 @@ function MealPlanner({ items, goals, shopping, onCook, onAddShopping, toast }) {
 
   return (
     <section className="fg-planner" aria-labelledby="planner-h">
-      <span className="fg-eyebrow">🗓️ WEEKLY RESCUE PLAN</span>
+      <span className="fg-eyebrow">🗓️ WEEKLY RESCUE PLAN <span className="fg-premium-badge">⭐ Premium</span></span>
       <h3 id="planner-h">Your next 7 dinners</h3>
       <p className="fg-planner-sub">Built around what expires first, and your food goals. It updates whenever the fridge changes.</p>
       <p className="fg-planner-summary">{plan.atRisk.length
@@ -2834,7 +2836,7 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
 
   return (
     <section className="fg-household" aria-labelledby="household-h">
-      <span className="fg-eyebrow">🏠 HOUSEHOLD SYNCING</span>
+      <span className="fg-eyebrow">🏠 HOUSEHOLD SYNCING <span className="fg-premium-badge">⭐ Premium</span></span>
       <h3 id="household-h">Share one fridge</h3>
       <p>Everyone who uses this code sees the same fridge, shopping list and stats. Changes appear on the other phones within a few seconds.</p>
       <div className="fg-household-code">
@@ -2854,7 +2856,7 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
       </div>
       {err && <p role="alert" className="fg-household-error">{err}</p>}
       <div className="fg-scoreboard">
-        <p className="fg-scoreboard-title">🕵️ Who ate what</p>
+        <p className="fg-scoreboard-title">🕵️ Who ate what <span className="fg-premium-badge">⭐ Premium</span></p>
         {board === null ? <p className="fg-scoreboard-empty">Loading…</p>
           : board.length === 0 ? <p className="fg-scoreboard-empty">No cases closed yet. Mark something as eaten and your name shows up here.</p>
           : <ol>{board.map((m, i) => (
@@ -2865,21 +2867,23 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
   );
 }
 
-function Extras({ items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
+function Premium({ items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
   return (
     <>
-      <SectionTitle kicker="All included" title="Extras">Meal planning, household sharing and personal recipes. Everything here is free.</SectionTitle>
+      <SectionTitle kicker="⭐ Premium · unlocked for everyone" title="Fridge Graveyard Premium">Meal planning, household sharing and personal recipes. All premium features are included for free, with no payments.</SectionTitle>
       <MealPlanner items={items} goals={goals} shopping={shopping} onCook={onCook} onAddShopping={onAddShopping} toast={toast} />
       <HouseholdPanel memberName={memberName} onSaveName={onSaveName} toast={toast} askConfirm={askConfirm} logLength={logLength} />
       <div className="fg-extra-cards">
         <section className="fg-extra-card">
           <span aria-hidden="true">🧑‍🍳</span>
+          <span className="fg-premium-badge">⭐ Premium</span>
           <h3>Personalized recipes</h3>
           <p>Set your eating style, allergies, favourite and disliked ingredients, and protein or fibre goals. Recipes and the meal plan follow them.</p>
           <button type="button" onClick={goRecipes}>Set my food goals →</button>
         </section>
         <section className="fg-extra-card">
           <span aria-hidden="true">📚</span>
+          <span className="fg-premium-badge">⭐ Premium</span>
           <h3>Recipe library</h3>
           <p>{RECIPES.length} rescue recipes, from 5-minute smoothies to a slow banana bread, each with estimated nutrition.</p>
           <button type="button" onClick={goRecipes}>Browse recipes →</button>
@@ -2898,7 +2902,7 @@ const TABS = [
   { id: 'recipes', label: 'Recipes', icon: '🍳' },
   { id: 'list', label: 'List', icon: '🛒' },
   { id: 'stats', label: 'Stats', icon: '📁' },
-  { id: 'extras', label: 'Extras', icon: '⭐' },
+  { id: 'premium', label: 'Premium', icon: '⭐' },
 ];
 
 function App({ initialState, initialVersion, initialFresh }) {
@@ -3118,7 +3122,7 @@ function App({ initialState, initialVersion, initialFresh }) {
           onClearAll={() => setConfirm({ title: 'Clear the whole list?', body: 'Every item on the shopping list will be removed.', danger: true, confirmLabel: 'Clear all',
             onConfirm: () => { setState((s) => ({ ...s, shopping: [] })); toast('Shopping list cleared.'); } })} />}
         {tab === 'stats' && <Stats state={state} onReset={resetData} />}
-        {tab === 'extras' && <Extras items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
+        {tab === 'premium' && <Premium items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
           goRecipes={() => { setFocusId(null); goTab('recipes'); }} memberName={memberName} onSaveName={saveMemberName} askConfirm={setConfirm} logLength={state.log.length} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">

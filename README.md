@@ -40,7 +40,7 @@ Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
 - **Fridge:** track items by expiry, with a daily rescue mission and suggested actions.
 - **Recipes:** 32 rescue recipes ranked by how much at-risk food they use, with estimated nutrition.
 - **Food goals:** eating style, allergies, favourite and disliked ingredients, protein and fibre goals.
-- **Extras (all free):**
+- **Premium (unlocked for free, no payments):**
   - Weekly meal planner that plans 7 dinners around expiry dates and builds one shopping list.
   - Household syncing: share one fridge with flatmates using a 6-character household code.
   - Who-ate-what: every eaten or wasted item records who closed it, with a household scoreboard.
@@ -49,7 +49,7 @@ Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
 ## Households
 
 Every browser gets its own household on first visit, so visitors never see each other's fridge.
-The code is shown on the Extras tab. Entering a flatmate's code joins their fridge, and changes
+The code is shown on the Premium tab. Entering a flatmate's code joins their fridge, and changes
 sync to the other phones within a few seconds. If two people save at the same moment, the later
 save is rejected (HTTP 409) and that phone reloads the latest version instead of overwriting it.
 
