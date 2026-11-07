@@ -42,64 +42,42 @@
 
 <style>
 /* =========================================================================
-   FRIDGE GRAVEYARD — PLUM & PASTEL EDITION
-   Complete visual theme replacement
+   FRIDGE GRAVEYARD — LAVENDER / LIME / CREAM
+   Unified palette and legacy Tailwind compatibility
    ========================================================================= */
 
 :root {
-  color-scheme: dark;
-
-  /* Deep plum foundation */
-  --fg-bg: #35283A;
-  --fg-bg-deep: #2B202F;
-  --fg-bg-soft: #443349;
-
-  /* Soft pastel surfaces */
-  --fg-surface: #F8EDF0;
-  --fg-surface-soft: #F0E3EF;
-  --fg-surface-hover: #EADBEA;
-  --fg-surface-raised: #E9D8E5;
-
-  /* Text */
-  --fg-ink: #49364D;
-  --fg-muted: #79677B;
-  --fg-subtle: #9A879A;
-  --fg-light: #FFF7F1;
-
-  /* Accent colours */
-  --fg-primary: #E9B8C5;
-  --fg-primary-hover: #DDA2B5;
-  --fg-primary-soft: #F5DCE4;
-
-  --fg-lavender: #D9C7E8;
-  --fg-lavender-soft: #EEE5F5;
-
-  --fg-peach: #F3CCB5;
-  --fg-peach-soft: #F9E6DA;
-
-  --fg-yellow: #F0D58C;
-  --fg-yellow-soft: #FAEFCF;
-
-  --fg-green: #8DAE91;
-  --fg-green-soft: #E0EBDD;
-
-  --fg-teal: #91B8B8;
-  --fg-teal-soft: #DFEEEE;
-
-  --fg-red: #C77A83;
-  --fg-red-soft: #F5DFE0;
-
-  /* Structure */
-  --fg-border: #DCC9DA;
-  --fg-border-strong: #C5A9C6;
-
-  --fg-shadow:
-    0 5px 16px rgba(25, 15, 29, .13),
-    0 2px 5px rgba(25, 15, 29, .07);
-
-  --fg-shadow-hover:
-    0 12px 28px rgba(25, 15, 29, .2);
-
+  color-scheme: light;
+  --fg-bg: #d6bdf9;
+  --fg-bg-deep: #c8acf6;
+  --fg-bg-soft: #e5d5ff;
+  --fg-surface: #fffdf7;
+  --fg-surface-soft: #f4effd;
+  --fg-surface-hover: #eee5fc;
+  --fg-surface-raised: #e9def9;
+  --fg-ink: #493b61;
+  --fg-muted: #786c8b;
+  --fg-subtle: #9488a2;
+  --fg-light: #493b61;
+  --fg-primary: #dded69;
+  --fg-primary-hover: #cfe44c;
+  --fg-primary-soft: #f4f9cc;
+  --fg-lavender: #d6bdf9;
+  --fg-lavender-soft: #f4effd;
+  --fg-peach: #f6c6d9;
+  --fg-peach-soft: #fff0f3;
+  --fg-yellow: #e6f16c;
+  --fg-yellow-soft: #f4f9cc;
+  --fg-green: #6c974b;
+  --fg-green-soft: #e8f3cf;
+  --fg-teal: #91b8b8;
+  --fg-teal-soft: #dfeeee;
+  --fg-red: #c77a83;
+  --fg-red-soft: #f5dfe0;
+  --fg-border: #e5daf1;
+  --fg-border-strong: #c9b5e3;
+  --fg-shadow: 0 8px 22px rgba(80,53,120,.09);
+  --fg-shadow-hover: 0 16px 30px rgba(80,53,120,.15);
   --fg-radius: 22px;
 }
 
@@ -115,12 +93,10 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 5% 0%, rgba(217,199,232,.12), transparent 38%),
-    radial-gradient(ellipse at 100% 35%, rgba(233,184,197,.10), transparent 40%),
-    radial-gradient(ellipse at 50% 100%, rgba(243,204,181,.07), transparent 45%),
-    var(--fg-bg) !important;
-  color: var(--fg-light) !important;
+  background: radial-gradient(circle at 6% 10%,#e5d5ff 0,transparent 35%),
+              radial-gradient(circle at 92% 38%,#c8acf6 0,transparent 40%),
+              var(--fg-bg) !important;
+  color: var(--fg-ink) !important;
   font-family: 'Nunito Sans', 'Inter', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
@@ -203,7 +179,9 @@ select {
    ========================================================================= */
 
 /* Main cards: soft pastel rather than dark slate */
+
 body [class*="bg-black"]:not([class*="bg-black/"]),
+
 body [class*="bg-slate-950"],
 body [class*="bg-slate-900"] {
   background-color: var(--fg-surface) !important;
@@ -465,7 +443,7 @@ body [role="dialog"] > div[class*="border-t"] {
   border-color: var(--fg-border) !important;
 }
 
-body [class*="bg-black/75"] {
+body .fg-modal-backdrop {
   background: rgba(31,21,36,.76) !important;
 }
 
@@ -489,7 +467,7 @@ header.sticky p {
 }
 
 /* Header detective icon */
-header.sticky > div:nth-child(2) > div:first-child {
+header.sticky .fg-header-icon {
   background: #E9D8E5 !important;
   border-color: #DCC9DA !important;
 }
@@ -697,45 +675,6 @@ input[type="checkbox"] {
 @keyframes mascot-message {
   from { opacity: 0; transform: translateY(5px) scale(.9); }
   to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* Broccoli mascot */
-.fg-broccoli {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-  animation: broccoli-float 2.8s ease-in-out infinite;
-}
-
-.fg-broccoli svg {
-  overflow: visible;
-}
-
-.fg-broccoli-tear {
-  transform-origin: center;
-  animation: broccoli-tear 1.8s ease-in-out infinite;
-}
-
-.fg-broccoli.is-happy {
-  animation: broccoli-celebrate 650ms ease-in-out;
-}
-
-@keyframes broccoli-float {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-6px) rotate(2deg); }
-}
-
-@keyframes broccoli-tear {
-  0%, 100% { transform: translateY(0); opacity: .8; }
-  50% { transform: translateY(5px); opacity: 1; }
-}
-
-@keyframes broccoli-celebrate {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.16) rotate(-8deg); }
-  70% { transform: scale(1.1) rotate(8deg); }
-  100% { transform: scale(1); }
 }
 
 /* =========================================================================
@@ -1004,20 +943,14 @@ body #root .fixed[aria-live="polite"] > div {
 }
 
 /* ============================================================
-   CHILL-KITTY-INSPIRED RESCUE WORLD — LAVENDER / LIME / CREAM
+   LAVENDER RESCUE WORLD — COMPONENT STYLES
+   Uses the unified palette above. No second :root or global recolor.
    ============================================================ */
-:root { color-scheme:light; --fg-bg:#d6bdf9; --fg-surface:#fffdf7; --fg-surface-soft:#f4effd; --fg-surface-hover:#eee5fc; --fg-surface-raised:#e9def9; --fg-ink:#493b61; --fg-muted:#786c8b; --fg-subtle:#9488a2; --fg-primary:#dded69; --fg-primary-hover:#cfe44c; --fg-yellow:#e6f16c; --fg-yellow-soft:#f4f9cc; --fg-green:#6c974b; --fg-green-soft:#e8f3cf; --fg-border:#e5daf1; --fg-border-strong:#c9b5e3; --fg-shadow:0 8px 22px rgba(80,53,120,.09); --fg-shadow-hover:0 16px 30px rgba(80,53,120,.15); }
-html {background:#d6bdf9!important} body {background:radial-gradient(circle at 6% 10%,#e5d5ff 0,transparent 35%),radial-gradient(circle at 92% 38%,#c8acf6 0,transparent 40%),#d6bdf9!important;color:#493b61!important}
-body [class*="bg-slate-900"],body [class*="bg-slate-950"],body [class*="bg-black"]:not([class*="bg-black/"]) {background-color:#fffdf7!important;color:#493b61!important}
-body [class*="bg-slate-800"] {background-color:#f1eafb!important;color:#493b61!important}
-body [class*="bg-slate-700"] {background-color:#e8ddf8!important;color:#493b61!important}
-body [class*="from-slate-900"],body [class*="from-slate-950"] {--tw-gradient-from:#fffdf7!important;--tw-gradient-to:#fffdf7!important}
-body [class*="to-slate-900"],body [class*="to-slate-950"] {--tw-gradient-to:#f3eafb!important}
-body [class*="bg-yellow-400"] {background-color:#e5f16c!important}body button[class*="bg-yellow-400"]{color:#493b61!important}
+
 header.sticky {background:rgba(255,253,247,.96)!important;border:0!important;box-shadow:0 5px 18px rgba(84,57,119,.09)}
 header.sticky .caution-tape {height:5px;background:repeating-linear-gradient(110deg,#c9b0f3 0 26px,#e7f16f 26px 52px,#f6c6d9 52px 78px)!important}
 header.sticky h1 {color:#56427b!important}header.sticky p{color:#8a7b9e!important}
-header.sticky > div:nth-child(2) > div:first-child {background:#e5f16c!important;border-color:#d6e45b!important;border-radius:18px!important}
+header.sticky .fg-header-icon {background:#e5f16c!important;border-color:#d6e45b!important;border-radius:18px!important}
 .fg-main{padding-top:30px!important} .fg-home{font-family:'Nunito Sans',sans-serif;color:#51436a}
 .fg-home-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 22px;padding:0 4px}
 .fg-eyebrow{font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8060ad}
@@ -1026,7 +959,7 @@ header.sticky > div:nth-child(2) > div:first-child {background:#e5f16c!important
 .fg-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 180px;align-items:center;gap:10px;min-height:240px;padding:26px 32px;border-radius:32px;background:#fffdf7;box-shadow:0 10px 0 rgba(132,101,177,.13),0 18px 35px rgba(86,53,133,.1);overflow:hidden;border:2px solid #f9f4ff}
 .fg-hero:before{content:'';position:absolute;width:310px;height:310px;right:-90px;top:-80px;background:#e6f2a3;border-radius:50%;opacity:.85}.fg-hero-decoration{position:absolute;color:#bda1e7;font-size:24px;animation:fg-twinkle 2.5s infinite}.fg-star-one{top:17px;right:46%}.fg-star-two{bottom:14px;right:18%;animation-delay:1s}
 .fg-hero-copy{position:relative;z-index:1}.fg-hero-eyebrow{display:inline-block;border-radius:50px;background:#e9ddff;color:#654b98;font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;padding:8px 12px}.fg-hero h3{font:800 clamp(24px,4vw,37px)/1.12 'Baloo 2',sans-serif;color:#594080;margin:12px 0 7px}.fg-hero p{color:#7d6d8f;font-size:14px;max-width:410px;line-height:1.55}
-.fg-hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}.fg-hero-actions button,.fg-inline-add,.fg-empty-food button{background:#e4f06b;color:#4a4c36;border:2px solid #d5e35b;border-radius:16px;padding:11px 17px;font:600 13px 'Fredoka',sans-serif;box-shadow:0 4px 0 #c4d34b;cursor:pointer}.fg-hero-actions button:nth-child(2){background:#f0e6fb;border-color:#e6d8f6;box-shadow:0 4px 0 #d9c8ef;color:#654c8c}.fg-hero-actions button:hover,.fg-inline-add:hover{transform:translateY(-3px)}
+.fg-hero-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:20px}.fg-hero-actions button,.fg-inline-add,.fg-empty-food button{background:#e4f06b;color:#4a4c36;border:2px solid #d5e35b;border-radius:16px;padding:11px 17px;font:600 13px 'Fredoka',sans-serif;box-shadow:0 4px 0 #c4d34b;cursor:pointer}.fg-hero-actions .fg-recipe-link{background:#f0e6fb;border-color:#e6d8f6;box-shadow:0 4px 0 #d9c8ef;color:#654c8c}.fg-hero-actions button:hover,.fg-inline-add:hover{transform:translateY(-3px)}
 .fg-hero-character{position:relative;display:grid;place-items:center;z-index:1;min-height:170px}.fg-hero-character .food-mascot{filter:drop-shadow(0 10px 2px rgba(97,117,57,.09));animation:mascot-float 2.7s ease-in-out infinite}.fg-character-halo{position:absolute;width:165px;height:165px;border:3px dashed rgba(130,161,63,.28);border-radius:50%;animation:fg-spin 28s linear infinite}.fg-hero-bubble{position:absolute;top:0;right:0;background:#f7d9e6;color:#925875;padding:9px 12px;border-radius:18px 18px 18px 3px;font:600 12px 'Fredoka',sans-serif;animation:fg-bubble 2s ease-in-out infinite}
 .fg-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:24px 0}.fg-stat{display:flex;align-items:center;flex-direction:column;justify-content:center;gap:3px;min-height:122px;padding:14px 8px;border-radius:24px;border:2px solid rgba(255,255,255,.6);box-shadow:0 6px 14px rgba(78,49,122,.07);transition:transform .2s}.fg-stat:hover{transform:translateY(-5px) rotate(-1deg)}.fg-stat>span{font-size:26px}.fg-stat strong{font:800 29px/1 'Baloo 2',sans-serif;color:#574078}.fg-stat small{font-size:12px;font-weight:800;color:#6d6081;text-align:center}.fg-stat-purple{background:#f1e6ff}.fg-stat-pink{background:#ffe2ec}.fg-stat-green{background:#e6f2bc}.fg-stat-yellow{background:#fff3c8}
 .fg-tip{display:flex;align-items:center;gap:14px;padding:14px 18px;background:#eaf4c9;border:2px solid #f5f9e8;border-radius:23px;margin-bottom:28px}.fg-tip-character{font-size:35px;animation:fg-wiggle 3s infinite}.fg-tip>div:nth-child(2){flex:1}.fg-tip strong{font:700 15px 'Fredoka',sans-serif;color:#577143}.fg-tip p{font-size:12px;color:#627450;margin-top:2px}.fg-tip button{font-size:24px;color:#6c9047;background:#fffdf7;border-radius:50%;width:39px;height:39px}
@@ -1044,6 +977,43 @@ body > #root button.fixed[class*="bottom-24"]{background:#e6f16f!important;borde
 body [class*="text-sky-300"]{color:#3E6A80!important}body [class*="border-sky-500"]{border-color:#9DC3D6!important}
 @media(prefers-reduced-motion:reduce){.fg-hero-decoration,.fg-heading-icon,.fg-tip-character,.fg-food-emoji,.fg-hero-bubble,.fg-character-halo{animation:none!important}}
 
+/* Review fixes: readable status, frozen state, accessible backdrop and buttons */
+body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
+.fg-food-card-button { position:relative; overflow:hidden; padding-bottom:19px!important; }
+.fg-status-strip { position:absolute; left:0; right:0; bottom:0; height:6px; }
+.fg-status-fresh { background:#75ae65; }
+.fg-status-warning { background:#e4b64c; }
+.fg-status-critical { background:#d97579; }
+.fg-status-expired { background:#a39aab; }
+.fg-frozen-badge { display:inline-flex; align-items:center; gap:3px; padding:3px 7px;
+  border-radius:99px; background:#dcefff; color:#285b7a; font:700 10px 'Fredoka',sans-serif; }
+.fg-stat-deceased { background:#ede8f2; }
+.fg-freeze-button { background:#dcefff!important; color:#285b7a!important;
+  border:1.5px solid #8dbcd7!important; }
+.fg-freeze-button:hover:not(:disabled) { background:#c6e4fa!important; color:#194764!important; }
+.fg-freeze-button:disabled { color:#45677a!important; }
+@media(min-width:900px){ .fg-stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));} }
+@media(max-width:899px){ .fg-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
+@media(max-width:650px){ .fg-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+
+
+/* Final release refinements */
+.fg-nutrition{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-top:12px;padding:10px 12px;border:1px solid #d8e6a2;border-radius:15px;background:#f0f8d4;color:#4e5b3c;font-size:12px}
+.fg-nutrition strong{font:700 14px 'Fredoka',sans-serif;color:#4b6036}
+.fg-nutrition small{flex-basis:100%;font-size:10px;color:#6a745a}
+.fg-ingredient-qty{font-size:11px;color:#8b799e;font-weight:500}
+.recipe-card .food-mascot-message{font-size:10px}
+@media(max-width:650px){.fg-nutrition{gap:4px 9px}.fg-nutrition strong{font-size:13px}}
+
+/* Per-recipe ingredient mascots: compact, friendly and never hardcoded to broccoli. */
+.fg-recipe-rescue-character{display:inline-flex;align-items:center;gap:10px;margin-top:10px;max-width:100%;min-height:64px}
+.fg-recipe-mascot-avatar{position:relative;display:grid;place-items:center;width:58px;height:58px;flex-shrink:0;border-radius:20px;background:#f5e9cf;border:2px solid #ead6b8;box-shadow:0 4px 0 #e9d9c4;transform:rotate(-4deg);animation:mascot-float 3s ease-in-out infinite}
+.fg-recipe-mascot-emoji{font-size:37px;line-height:1;filter:drop-shadow(0 2px 1px #a77c5533)}
+.fg-recipe-mascot-face{position:absolute;bottom:2px;right:1px;background:#fff9ee;border:1px solid #ddc3ae;border-radius:12px;padding:0 3px;font:700 12px/17px 'Fredoka',sans-serif;color:#5d4056;letter-spacing:1px}
+.fg-recipe-rescue-message{display:flex;flex-direction:column;gap:3px;min-width:0;padding:7px 11px;border-radius:14px 14px 14px 3px;background:#efc3d4;color:#634359;box-shadow:0 4px 10px #78516a22;font-family:'Fredoka',sans-serif}
+.fg-recipe-rescue-message strong{font-size:12px;max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fg-recipe-rescue-message span{font-size:11px;font-weight:600}
+@media(max-width:650px){.fg-recipe-mascot-avatar{width:50px;height:50px}.fg-recipe-mascot-emoji{font-size:31px}.fg-recipe-rescue-message strong{max-width:115px}}
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -1167,7 +1137,7 @@ const RECIPES = [
       { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
       { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
       { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
-      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'bottle' },
+      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'tbsp' },
       { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
     ] },
   { id: 'r2', title: 'Cold Case Curry', time: 15, difficulty: 'Easy',
@@ -1175,14 +1145,14 @@ const RECIPES = [
     ingredients: [
       { name: 'Leftover curry', keys: ['curry'], qty: 1, unit: 'portion' },
       { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
-      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'bag' },
+      { name: 'Spinach', keys: ['spinach'], qty: 100, unit: 'g' },
       { name: 'Tomatoes', keys: ['tomato'], qty: 2, unit: 'pcs' },
     ] },
   { id: 'r3', title: 'The Getaway Frittata', time: 20, difficulty: 'Easy',
     blurb: 'Eggs are the perfect accomplice: they hide any vegetable you need to get rid of.',
     ingredients: [
       { name: 'Eggs', keys: ['egg'], qty: 6, unit: 'pcs' },
-      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'bag' },
+      { name: 'Spinach', keys: ['spinach'], qty: 100, unit: 'g' },
       { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 100, unit: 'g' },
       { name: 'Mushrooms', keys: ['mushroom'], qty: 150, unit: 'g' },
       { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
@@ -1228,14 +1198,14 @@ const RECIPES = [
       { name: 'Banana', keys: ['banana'], qty: 2, unit: 'pcs' },
       { name: 'Yogurt', keys: ['yogurt', 'yoghurt', 'skyr'], qty: 150, unit: 'g' },
       { name: 'Milk', keys: ['milk'], qty: 200, unit: 'ml' },
-      { name: 'Spinach', keys: ['spinach'], qty: 1, unit: 'handful' },
+      { name: 'Spinach', keys: ['spinach'], qty: 35, unit: 'g' },
     ] },
   { id: 'r9', title: 'Midnight Alibi Fried Rice', time: 15, difficulty: 'Easy',
     blurb: 'Day-old rice is the best rice. That’s the alibi, and it checks out.',
     ingredients: [
-      { name: 'Cooked rice', keys: ['rice'], qty: 2, unit: 'cup' },
+      { name: 'Cooked rice', keys: ['rice'], qty: 300, unit: 'g' },
       { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
-      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'bottle' },
+      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'tbsp' },
       { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
       { name: 'Frozen peas', keys: ['pea'], qty: 150, unit: 'g' },
       { name: 'Garlic', keys: ['garlic'], qty: 1, unit: 'clove' },
@@ -1347,20 +1317,19 @@ const API = '/api/state';
 
 // Load state from the Python backend. Falls back to demo data if nothing is saved yet.
 async function loadState() {
-  try {
-    const res = await fetch(API);
-    if (res.ok) {
-      const { state: s } = await res.json();
-      if (s && s.version === STATE_VERSION && Array.isArray(s.items)) return s;
-    }
-  } catch (e) { /* backend not reachable: fall back to seed */ }
-  return makeSeed();
+  const res = await fetch(API, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Load failed: HTTP ${res.status}`);
+  const payload = await res.json();
+  if (!Object.prototype.hasOwnProperty.call(payload, 'state')) throw new Error('Invalid server response');
+  if (payload.state === null) return makeSeed();
+  if (payload.state.version !== STATE_VERSION || !Array.isArray(payload.state.items)) throw new Error('Unsupported saved data. Nothing was overwritten.');
+  return payload.state;
 }
-
 async function saveState(state) {
   const res = await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
-  // fetch() only rejects on network errors; surface HTTP errors (e.g. 400 validation) too.
-  if (!res.ok) throw new Error('Save failed: HTTP ' + res.status);
+  // Surface HTTP errors (including validation failures).
+  if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
+
 }
 
 /* =========================================================================
@@ -1384,7 +1353,7 @@ function Btn({ variant = 'secondary', className = '', ...props }) {
     ghost: 'text-slate-300 hover:bg-slate-800',
     danger: 'bg-red-500/15 text-red-300 border border-red-500/40 hover:bg-red-500/25',
     success: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25',
-    ice: 'bg-sky-500/15 text-sky-300 border border-sky-500/40 hover:bg-sky-500/25',
+    ice: 'fg-freeze-button bg-sky-500/15 text-sky-300 border border-sky-500/40 hover:bg-sky-500/25',
   };
   return (
     <button
@@ -1529,7 +1498,7 @@ function Modal({ open, onClose, title, kicker, children, footer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div
-        className="absolute inset-0 bg-black/75 backdrop-blur-[2px]"
+        className="fg-modal-backdrop absolute inset-0 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -1607,12 +1576,16 @@ function EvidenceCard({ item, onOpen }) {
       <button type="button" onClick={() => onOpen(item.id)} className="fg-food-card-button" aria-label={`${item.name}, ${STATUS[s].label}, ${daysText(item)}. ${action.label}. Open case file.`}>
         <span className="fg-food-art" aria-hidden="true">{food.type ? <FoodMascot type={food.type} mood={s === 'fresh' ? 'happy' : 'worried'} size={66} /> : <span className="fg-food-emoji">{food.emoji}</span>}</span>
         <span className="fg-food-copy">
-          <span className="fg-food-kicker">CASE {caseNo(item.id)}{item.isLeftover ? ' · LEFTOVER' : ''}{item.frozen ? ' · 🧊 FROZEN' : ''}</span>
+
+          <span className="fg-food-kicker">CASE {caseNo(item.id)} {item.isLeftover ? '· LEFTOVER' : ''}</span>
+          {item.frozen && <span className="fg-frozen-badge">🧊 Frozen</span>}
+
           <strong className="fg-food-name">{item.name}</strong>
           <span className="fg-food-detail">{item.quantity} {item.unit} · {item.category}</span>
           <span className="fg-food-speech">💬 {food.speech}</span>
         </span>
         <span className="fg-food-side"><StatusBadge item={item}/><span className="fg-food-days">{daysText(item)}</span><span className="fg-food-action">{action.icon} {action.label} →</span></span>
+        <span className={`fg-status-strip fg-status-${s}`} aria-hidden="true" />
       </button>
     </li>
   );
@@ -1651,15 +1624,17 @@ function Dashboard({ items, onOpen, onAdd, goRecipes }) {
       <div className="fg-home-heading"><div><div className="fg-eyebrow">✦ YOUR LITTLE FOOD RESCUE WORLD ✦</div><h2>Welcome to Rescue HQ <span className="fg-heading-sparkle">✿</span></h2><p>Every ingredient has a story. Let's give it a happy ending!</p></div><span className="fg-heading-icon">🔍</span></div>
       <section className="fg-hero" aria-label="Today's rescue mission">
         <div className="fg-hero-decoration fg-star-one">✦</div><div className="fg-hero-decoration fg-star-two">✳</div>
-        <div className="fg-hero-copy"><span className="fg-hero-eyebrow">🎯 TODAY'S RESCUE MISSION</span><h3>{prime ? `Psst... ${prime.name} needs you!` : (items.length ? 'The fridge is feeling fabulous!' : 'Your fridge is empty!')}</h3><p>{prime ? `${daysText(prime)}. Your food detective needs a helping hand!` : (items.length ? 'No urgent suspects today. Keep up the good work!' : 'Add what is in your fridge and the detective will tell you what to eat first.')}</p><div className="fg-hero-actions"><button type="button" onClick={prime ? () => onOpen(prime.id) : onAdd}>🔎 {prime ? 'Save this food' : 'Add food'}</button><button type="button" onClick={goRecipes}>🍳 Find recipes</button></div></div>
+
+        <div className="fg-hero-copy"><span className="fg-hero-eyebrow">🎯 TODAY'S RESCUE MISSION</span><h3>{prime ? `Psst... ${prime.name} needs you!` : (items.length ? 'The fridge is feeling fabulous!' : 'Your fridge is empty!')}</h3><p>{prime ? `${daysText(prime)}. Your food detective needs a helping hand!` : (items.length ? 'No urgent suspects today. Keep up the good work!' : 'Add what is in your fridge and the detective will tell you what to eat first.')}</p><div className="fg-hero-actions"><button type="button" onClick={prime ? () => onOpen(prime.id) : onAdd}>🔎 {prime ? 'Save this food' : 'Add food'}</button><button type="button" className="fg-recipe-link" onClick={goRecipes}>🍳 Find recipes</button></div></div>
+
         <div className="fg-hero-character"><div className="fg-character-halo"></div><FoodMascot type={prime && prime.name.toLowerCase().includes('tomato') ? 'tomato' : prime && prime.name.toLowerCase().includes('spinach') ? 'spinach' : 'broccoli'} mood={prime ? 'worried' : 'happy'} size={132}/><span className="fg-hero-bubble">{prime ? 'Help meee! ♡' : 'Yay! ♡'}</span></div>
       </section>
-      <div className="fg-stats-grid"><div className="fg-stat fg-stat-purple"><span>🧺</span><strong>{counts.all}</strong><small>In your fridge</small></div><div className="fg-stat fg-stat-pink"><span>⏰</span><strong>{counts.critical + counts.warning}</strong><small>Need rescuing</small></div><div className="fg-stat fg-stat-green"><span>🌱</span><strong>{counts.fresh}</strong><small>Happy & fresh</small></div><div className="fg-stat fg-stat-yellow"><span>🍱</span><strong>{counts.leftover}</strong><small>Leftover buddies</small></div></div>
+      <div className="fg-stats-grid"><div className="fg-stat fg-stat-purple"><span>🧺</span><strong>{counts.all}</strong><small>In your fridge</small></div><div className="fg-stat fg-stat-pink"><span>⏰</span><strong>{counts.critical + counts.warning}</strong><small>Need rescuing</small></div><div className="fg-stat fg-stat-green"><span>🌱</span><strong>{counts.fresh}</strong><small>Happy & fresh</small></div><div className="fg-stat fg-stat-yellow"><span>🍱</span><strong>{counts.leftover}</strong><small>Leftover buddies</small></div><div className="fg-stat fg-stat-deceased"><span>🪦</span><strong>{counts.expired}</strong><small>Deceased</small></div></div>
       <section className="fg-tip"><div className="fg-tip-character">💡</div><div><strong>Detective's tiny tip</strong><p>{tips[tipIndex]}</p></div><button type="button" aria-label="Next food rescue tip" onClick={() => setTipIndex(i => (i + 1) % tips.length)}>↻</button></section>
       <section className="fg-evidence-section"><div className="fg-evidence-heading"><div><span className="fg-eyebrow">🗂️ THE EVIDENCE LOCKER</span><h3>Meet your food suspects <span>✦</span></h3><p>Tap a food buddy to investigate, cook, freeze or rescue it.</p></div><button type="button" onClick={onAdd} className="fg-inline-add">＋ Add food</button></div>
       <div className="fg-filter-row" role="group" aria-label="Filter food">{FILTERS.map(f => <button type="button" key={f.id} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.id === 'fresh' ? '🌱 ' : f.id === 'critical' ? '🚨 ' : f.id === 'warning' ? '⏰ ' : f.id === 'expired' ? '👻 ' : f.id === 'leftover' ? '🍱 ' : '✨ '}{f.label} <span>{counts[f.id]}</span></button>)}</div>
       <label className="fg-search"><span aria-hidden="true">🔍</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a food buddy..."/><span className="sr-only">Search food</span></label>
-      {visible.length ? <ul className="fg-food-grid">{visible.map(i => <EvidenceCard key={i.id} item={i} onOpen={onOpen}/>)}</ul> : <div className="fg-empty-food"><div>🥺</div><strong>No food buddies here!</strong><p>Try another filter, or invite a new ingredient into your fridge.</p><button type="button" onClick={onAdd}>＋ Add food</button></div>}</section>
+      {visible.length ? <ul className="fg-food-grid">{visible.map(i => <EvidenceCard key={i.id} item={i} onOpen={onOpen}/>)}</ul> : <div className="fg-empty-food"><div>🥺</div><strong>{items.length === 0 ? "The fridge is a blank case file!" : "No food buddies match this search!"}</strong><p>{items.length === 0 ? "Your evidence locker is empty. Add your first ingredient to start saving food." : "Try another filter or search term to find your food buddies."}</p><button type="button" onClick={onAdd}>＋ Add food</button></div>}</section>
       <section className="fg-bottom-promo"><span>🍓 🥦 🍋</span><div><strong>Little rescues make a big difference!</strong><p>Keep saving food, one delicious case at a time.</p></div><button type="button" onClick={goRecipes}>Explore recipes →</button></section>
     </div>
   );
@@ -1826,9 +1801,11 @@ function FoodMascot({
   size = 64,
   showMessage = false
 }) {
+
   const messages = mood === 'happy'
     ? { broccoli: 'Saved! Thank you!', spinach: 'Fresh again!', tomato: 'I SURVIVED!', ghost: 'Boo! No waste!' }
     : { broccoli: 'PLEASE USE ME!', spinach: 'Umm... remember me?', tomato: 'Cook me soon!', ghost: 'Boo! Food waste!' };
+
 
   const colours = {
     broccoli: { main: '#83A878', dark: '#527A50', light: '#A9C69A' },
@@ -1957,11 +1934,182 @@ function FoodMascot({
   );
 }
 
+const DEFAULT_GOALS = { diet: 'any', avoid: [], protein: '', fibre: '', showCalories: false };
+const ALLERGENS = ['milk','eggs','fish','shellfish','soy','wheat','peanuts','tree nuts','sesame'];
+const ALLERGEN_PATTERNS = {
+ milk: /milk|cheese|yogurt|yoghurt|cream|butter|skyr/i, eggs: /\beggs?\b|mayonnaise/i,
+ fish: /salmon|tuna|cod|anchov|\bfish\b/i, shellfish: /shrimp|prawn|crab|lobster/i,
+ soy: /soy|tofu|tempeh|edamame/i, wheat: /bread|pasta|tortilla|flour|toast|baguette|noodle|couscous/i,
+ peanuts: /peanut/i, 'tree nuts': /almond|walnut|cashew|pistachio|hazelnut|pecan/i,
+ sesame: /sesame|tahini/i
+};
+const MEAT_PATTERN = /chicken|beef|pork|bacon|ham|sausage|turkey|lamb|meat|bolognese/i;
+const FISH_PATTERN = /salmon|tuna|cod|fish|shrimp|prawn|anchov|crab/i;
+const ANIMAL_PATTERN = /milk|cheese|yogurt|yoghurt|cream|butter|egg|honey|gelatin|collagen/i;
+function compatibleRecipe(recipe, goals) {
+  const names = recipe.ingredients.map(i => i.name).join(' ') + ' ' + recipe.title;
+  if ((goals.avoid || []).some(a => ALLERGEN_PATTERNS[a]?.test(names))) return false;
+  if (goals.diet === 'vegan' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names) || ANIMAL_PATTERN.test(names))) return false;
+  if (goals.diet === 'vegetarian' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names))) return false;
+  if (goals.diet === 'pescatarian' && MEAT_PATTERN.test(names)) return false;
+  if (goals.diet === 'halal' && /pork|bacon|ham|wine|beer|alcohol/i.test(names)) return false;
+  return true;
+}
+// Approximate calories for a full recipe, not a personal serving. Reference values
+// are generic food averages; exact brands, preparation, oil and portions vary.
+const KCAL_PER_100G = [
+  [/chicken/,165], [/bell pepper/,31], [/onion/,40], [/garlic/,149],
+  [/soy sauce/,53], [/rice/,365], [/spinach/,23], [/tomato/,18],
+  [/egg/,143], [/cheese|cheddar|mozzarella|parmesan|feta/,350],
+  [/mushroom/,22], [/pasta|spaghetti|penne/,360], [/tortilla|wrap/,310],
+  [/bread|baguette|toast/,265], [/milk/,60], [/banana/,89],
+  [/yogurt|yoghurt|skyr/,85], [/potato/,77], [/carrot/,41],
+  [/lentil/,116], [/chickpea/,164], [/bean/,110], [/oat/,389],
+  [/salmon/,208], [/tuna/,132], [/shrimp|prawn/,99],
+  [/butter/,717], [/cream/,200], [/broccoli/,34], [/zucchini/,17],
+  [/cucumber/,15], [/lemon/,29], [/apple/,52], [/flour/,364],
+  [/curry|bolognese|ragu/,140], [/corn/,86], [/avocado/,160],
+  [/tofu/,90], [/pea/,81], [/sauce/,90]
+];
+const APPROX_GRAMS = {pcs:120, slice:35, slices:35, cup:180, portion:300,
+  handful:35, bag:150, cloves:4, clove:4, bottle:15, tbsp:15, tsp:5,
+  bunch:100, jar:200, pack:200, kg:1000, g:1, ml:1, L:1000};
+// Nutrition is a broad planning estimate based on reference ingredient quantities,
+// NOT the quantity actually stored in the fridge or a verified food label.
+const PROTEIN_PER_100G = [
+  [/chicken/,31], [/egg/,13], [/cheese|cheddar|mozzarella|parmesan|feta/,23],
+  [/pasta|spaghetti|penne/,13], [/rice/,7], [/soy sauce/,8], [/bread|baguette|toast/,9],
+  [/milk/,3.3], [/yogurt|yoghurt|skyr/,9], [/mushroom/,3.1], [/spinach/,2.9],
+  [/tomato/,0.9], [/bell pepper/,1], [/onion/,1.1], [/garlic/,6.4],
+  [/banana/,1.1], [/tortilla|wrap/,8], [/curry|bolognese|ragu/,8],
+  [/pea/,5.4], [/salmon/,20], [/tofu/,12], [/lentil/,9], [/oat/,17]
+];
+const FIBRE_PER_100G = [
+  [/chicken|egg|cheese|milk|yogurt|yoghurt|skyr|salmon|soy sauce/,0],
+  [/pasta|spaghetti|penne/,3], [/rice/,1.3], [/bread|baguette|toast/,2.7],
+  [/mushroom/,1], [/spinach/,2.2], [/tomato/,1.2], [/bell pepper/,2.1],
+  [/onion/,1.7], [/garlic/,2.1], [/banana/,2.6], [/tortilla|wrap/,3],
+  [/curry|bolognese|ragu/,1.5], [/pea/,5.7], [/tofu/,1], [/lentil/,8], [/oat/,10]
+];
+const RECIPE_SERVINGS = {r1:2,r2:2,r3:3,r4:3,r5:2,r6:2,r7:2,r8:2,r9:2,r10:2,r11:3};
+function estimateRecipeNutrition(recipe) {
+  let calories = 0, protein = 0, fibre = 0;
+  for (const ing of recipe.ingredients) {
+    const kcal = KCAL_PER_100G.find(([pattern]) => pattern.test(ing.name.toLowerCase()));
+    const p = PROTEIN_PER_100G.find(([pattern]) => pattern.test(ing.name.toLowerCase()));
+    const f = FIBRE_PER_100G.find(([pattern]) => pattern.test(ing.name.toLowerCase()));
+    const gramsPerUnit = APPROX_GRAMS[ing.unit];
+    if (!kcal || !p || !f || !gramsPerUnit || !Number.isFinite(Number(ing.qty))) return null;
+    const pieceGrams = /egg/i.test(ing.name) ? 50 : /tortilla/i.test(ing.name) ? 50 : /garlic/i.test(ing.name) ? 4 : /onion/i.test(ing.name) ? 110 : /pepper/i.test(ing.name) ? 140 : 120;
+    const weight = Number(ing.qty) * (ing.unit === 'pcs' ? pieceGrams : gramsPerUnit) / 100;
+    // Cooked rice is lower in energy than dry rice; don't use dry reference for it.
+    calories += weight * (ing.name === 'Cooked rice' ? 130 : kcal[1]);
+    protein += weight * (ing.name === 'Cooked rice' ? 2.7 : p[1]);
+    fibre += weight * (ing.name === 'Cooked rice' ? 0.4 : f[1]);
+  }
+  const servings = RECIPE_SERVINGS[recipe.id] || 2;
+  return { servings, calories: Math.round(calories / servings / 25) * 25,
+    protein: Math.round(protein / servings), fibre: Math.round(fibre / servings) };
+}
+function quantityLabel(ing) {
+  return `${ing.qty} ${ing.unit}`;
+}
+function FoodGoals({ goals, onChange, items, shopping, onAddShopping }) {
+  const [draft, setDraft] = useState(goals);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => { setDraft(goals); }, [goals]);
+  const set = (k,v) => { setDraft(old => ({ ...old, [k]: v })); setSaved(false); };
+  const dirty = JSON.stringify(draft) !== JSON.stringify(goals);
+  const apply = () => { onChange(draft); setSaved(true); };
+
+  // Suggestions come from actual missing ingredients in rescue-first recipes,
+  // rather than an unrelated list of 'healthy' foods.
+  const candidates = RECIPES.filter(r => compatibleRecipe(r, draft))
+    .map(r => analyzeRecipe(r, items))
+    .filter(r => r.usesItems.length > 0)
+    .sort((a,b) => b.rescues - a.rescues || b.score - a.score)
+    .slice(0, 4)
+    .flatMap(r => r.missingIngredients.map(ing => ({name:ing.name, recipe:r.title})))
+    .filter((g,i,all) => all.findIndex(x => x.name.toLowerCase() === g.name.toLowerCase()) === i)
+    .filter(g => !(shopping || []).some(x => !x.checked && x.name.toLowerCase() === g.name.toLowerCase()))
+    .slice(0, 8);
+  return <details className="mb-5 rounded-3xl border-2 border-purple-100 bg-[#fffdf7] p-5 text-[#493b61]">
+    <summary className="cursor-pointer font-display text-xl font-bold">🥗 My food goals & preferences</summary>
+    <p className="my-3 text-sm">Optional preferences. Food rescue remains the priority. This is a prototype: recipes are not certified allergen-free or halal, and nutrient amounts are not calculated.</p>
+    <label className="block text-sm font-bold">Eating style<select className="mt-1 block w-full p-2" value={draft.diet} onChange={e=>set('diet',e.target.value)}>
+      {['any','vegetarian','vegan','pescatarian','halal'].map(d=><option key={d} value={d}>{d==='any'?'No restriction':d[0].toUpperCase()+d.slice(1)}</option>)}
+    </select></label>
+    <p className="mt-4 text-sm font-bold">Ingredients to avoid (preliminary keyword filtering)</p>
+    <div className="mt-2 flex flex-wrap gap-2">{ALLERGENS.map(a=><label key={a} className="flex items-center gap-2 rounded-xl bg-purple-50 px-3 py-2 text-xs"><input type="checkbox" checked={(draft.avoid||[]).includes(a)} onChange={e=>set('avoid',e.target.checked?[...(draft.avoid||[]),a]:(draft.avoid||[]).filter(x=>x!==a))}/>{a}</label>)}</div>
+    <div className="mt-4 grid grid-cols-2 gap-3"><label className="text-sm">Protein goal (g/meal)<input type="number" min="0" max="250" placeholder="e.g. 30" value={draft.protein||''} onChange={e=>set('protein',e.target.value)} className="mt-1 w-full p-2"/></label><label className="text-sm">Fibre goal (g/day)<input type="number" min="0" max="100" placeholder="e.g. 25" value={draft.fibre||''} onChange={e=>set('fibre',e.target.value)} className="mt-1 w-full p-2"/></label></div>
+    <label className="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" checked={!!draft.showCalories} onChange={e=>set('showCalories',e.target.checked)}/> Show estimated calories, protein & fibre per serving</label>
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <button type="button" onClick={apply} disabled={!dirty} className="rounded-xl bg-lime-200 px-5 py-3 font-bold text-purple-950 disabled:opacity-50">Save my preferences</button>
+      <span role="status" aria-live="polite" className="text-xs text-purple-700">{dirty ? 'Unsaved changes — save to update recipes' : saved ? '✓ Preferences applied. Recipes updated; server save is automatic.' : 'Preferences currently applied'}</span>
+    </div>
+    <p className="mt-2 text-xs text-purple-700">Targets help sort recipes after urgent rescues. Nutrition estimates are per suggested serving, use assumed ingredient quantities and exclude added oil. These are not exact food-label values.</p>
+    <div className="mt-5 rounded-2xl border border-purple-100 bg-purple-50 p-4">
+      <p className="font-bold text-purple-950">🛒 Ingredients missing from your rescue recipes</p>
+      <p className="mt-1 text-xs text-purple-800">Optional shopping suggestions based on recipes that use food already in your fridge. Add only what you need; avoid buying more food than you can use.</p>
+      {candidates.length ? <div className="mt-3 flex flex-wrap gap-2">{candidates.map(g =>
+        <button type="button" key={g.name} className="rounded-xl border border-purple-200 bg-white px-3 py-2 text-xs text-purple-950 hover:bg-lime-100" onClick={()=>onAddShopping([{name:g.name,quantity:1,unit:'pack',source:'Recipe suggestions'}])} title={`Used in ${g.recipe}`}>＋ {g.name} <span className="text-purple-600">· for {g.recipe}</span></button>
+      )}</div> : <p className="mt-2 text-xs text-purple-800">No new ingredients to add — you have them or they are already on your list.</p>}
+    </div>
+    <p className="mt-3 text-xs">Check packaging and full ingredient lists for allergens, certification and nutrition. Goals are saved with this fridge's shared data.</p>
+  </details>;
+}
+
+/* Recipe mascots follow the actual fridge item being rescued, never the recipe title. */
+const RECIPE_MASCOT_RULES = [
+  [/bolognese|spaghetti|pasta|lasagn|macaroni|noodle/i, '🍝'],
+  [/curry|stew|soup|broth|chili/i, '🍲'],
+  [/chicken|poultry|turkey/i, '🍗'],
+  [/beef|steak|meat|mince|keema/i, '🥩'],
+  [/salmon|tuna|fish|cod/i, '🐟'],
+  [/shrimp|prawn|seafood/i, '🍤'],
+  [/tomato/i, '🍅'], [/spinach|kale|lettuce|leaf|salad/i, '🥬'],
+  [/broccoli/i, '🥦'], [/egg|frittata/i, '🥚'],
+  [/cheese|mozzarella|parmesan/i, '🧀'], [/milk|cream|yogurt|quark/i, '🥛'],
+  [/potato/i, '🥔'], [/carrot/i, '🥕'], [/onion/i, '🧅'],
+  [/garlic/i, '🧄'], [/pepper|paprika/i, '🫑'],
+  [/mushroom/i, '🍄'], [/rice/i, '🍚'], [/bread|toast|baguette/i, '🍞'],
+  [/banana/i, '🍌'], [/apple/i, '🍎'], [/orange|citrus/i, '🍊'],
+  [/lemon/i, '🍋'], [/strawberr/i, '🍓'], [/berry|blueberr/i, '🫐'],
+  [/avocado/i, '🥑'], [/corn/i, '🌽'], [/bean|lentil/i, '🫘'],
+  [/cucumber|pickle/i, '🥒'], [/cake|pastry|cookie/i, '🍰'],
+  [/leftover/i, '🍱']
+];
+function recipeMascotForItem(item) {
+  const name = String(item?.name || 'Food');
+  const rule = RECIPE_MASCOT_RULES.find(([pattern]) => pattern.test(name));
+  return { name, emoji: rule ? rule[1] : '🍽️' };
+}
+function recipeRescueItem(recipe) {
+  const candidates = recipe.usesItems
+    .map(({item}) => item)
+    .filter(item => item.isLeftover || ['critical', 'warning'].includes(getStatus(item)));
+  // Urgency first, then earliest expiry. Stable tie-breaker prevents jumping mascots.
+  return candidates.sort((a,b) => urgencyWeight(b) - urgencyWeight(a) || byPriority(a,b) || String(a.id).localeCompare(String(b.id)))[0] || null;
+}
+function RecipeRescueMascot({item}) {
+  if (!item) return null;
+  const {name, emoji} = recipeMascotForItem(item);
+  return (
+    <div className="fg-recipe-rescue-character" role="img" aria-label={`${name} rescue mascot says please use me`} title={`Rescue ${name} first`}>
+      <span className="fg-recipe-mascot-avatar" aria-hidden="true">
+        <span className="fg-recipe-mascot-emoji">{emoji}</span>
+        <span className="fg-recipe-mascot-face">•ᴗ•</span>
+      </span>
+      <span className="fg-recipe-rescue-message"><strong>{name}</strong><span>Rescue me! ♡</span></span>
+    </div>
+  );
+}
+
 /* =========================================================================
    3. RECIPE SUGGESTIONS
    ========================================================================= */
 
-function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
+function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing, showCalories }) {
   const missingOpen = recipe.missingIngredients.filter((i) => !shoppingNames.has(i.name.toLowerCase()));
   return (
     <li className="recipe-card pop overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
@@ -1971,21 +2119,8 @@ function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
             <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">Lead #{pad(index + 1)} · {recipe.time} min · {recipe.difficulty}</p>
             <h3 className="font-noir text-xl text-slate-50">{recipe.title}</h3>
             {recipe.rescues > 0 && (
-  <div className="mt-2 flex items-center gap-2">
-    <FoodMascot
-      type={
-        recipe.usesItems.some(u => u.ingredient.toLowerCase().includes('spinach'))
-          ? 'spinach'
-          : recipe.usesItems.some(u => u.ingredient.toLowerCase().includes('tomato'))
-            ? 'tomato'
-            : 'broccoli'
-      }
-      mood="worried"
-      size={58}
-      showMessage
-    />
-  </div>
-)}
+              <RecipeRescueMascot item={recipeRescueItem(recipe)} />
+            )}
           </div>
           {recipe.rescues > 0 && (
             <span className="recipe-rescue-badge shrink-0 rounded-full border border-yellow-400/50 bg-yellow-400/10 px-3 py-2 text-center font-mono text-[10px] uppercase leading-tight">
@@ -1996,6 +2131,14 @@ function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
           )}
         </div>
         <p className="mt-1 text-sm text-slate-400">{recipe.blurb}</p>
+        {showCalories && (() => {
+          const n = estimateRecipeNutrition(recipe);
+          return n ? <div className="fg-nutrition" aria-label="Approximate nutrition per serving">
+            <strong>≈ {n.calories} kcal / serving</strong>
+            <span>≈ {n.protein} g protein · ≈ {n.fibre} g fibre</span>
+            <small>Based on {n.servings} estimated servings; approximate quantities, no added oil.</small>
+          </div> : <p className="mt-2 text-xs text-purple-700">Nutrition estimate unavailable — ingredient data incomplete.</p>;
+        })()}
 
         <ul className="mt-3 space-y-1.5 text-sm" aria-label="Ingredients">
           {recipe.usesItems.map(({ ingredient, item }) => {
@@ -2003,7 +2146,7 @@ function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
             return (
               <li key={ingredient} className="flex items-center gap-2">
                 <span className="text-emerald-400" aria-hidden="true">✓</span>
-                <span className="text-slate-200">{ingredient}</span>
+                <span className="text-slate-200">{ingredient} <span className="fg-ingredient-qty">· {quantityLabel(recipe.ingredients.find(i => i.name === ingredient))}</span></span>
                 <span className={`ml-auto truncate font-mono text-[11px] ${STATUS[st].text}`}>
                   {item.isLeftover ? 'leftover · ' : ''}{daysText(item).toLowerCase()}
                 </span>
@@ -2013,7 +2156,7 @@ function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
           {recipe.missingIngredients.map((ing) => (
             <li key={ing.name} className="flex items-center gap-2">
               <span className="text-slate-500" aria-hidden="true">✗</span>
-              <span className="text-slate-400">{ing.name}</span>
+              <span className="text-slate-400">{ing.name} <span className="fg-ingredient-qty">· {quantityLabel(ing)}</span></span>
               <span className="ml-auto font-mono text-[11px] text-slate-500">{shoppingNames.has(ing.name.toLowerCase()) ? 'on list' : 'missing'}</span>
             </li>
           ))}
@@ -2029,19 +2172,29 @@ function RecipeCard({ recipe, index, shoppingNames, onCook, onAddMissing }) {
   );
 }
 
-function Recipes({ items, shopping, focusItem, clearFocus, onCook, onAddMissing, goScene }) {
+function Recipes({ items, shopping, focusItem, clearFocus, onCook, onAddMissing, goScene, goals, onGoalsChange, onAddShopping }) {
   const shoppingNames = useMemo(() => new Set(shopping.filter((s) => !s.checked).map((s) => s.name.toLowerCase())), [shopping]);
   const leads = useMemo(() => {
-    let list = RECIPES.map((r) => analyzeRecipe(r, items)).filter((r) => r.usesItems.length > 0);
+    let list = RECIPES.filter(r => compatibleRecipe(r, goals)).map((r) => analyzeRecipe(r, items)).filter((r) => r.usesItems.length > 0);
     if (focusItem) list = list.filter((r) => r.usesItems.some((u) => u.item.id === focusItem.id) || r.ingredients.some((ing) => matchesIngredient(focusItem, ing)));
-    return list.sort((a, b) => b.score - a.score || a.missingIngredients.length - b.missingIngredients.length);
-  }, [items, focusItem]);
+    // Urgent food stays first. Nutrition is a secondary, approximate ingredient-based tie-breaker.
+    const preferenceScore = r => {
+      const n = estimateRecipeNutrition(r);
+      if (!n) return 0;
+      let score = 0;
+      if (Number(goals.protein) > 0) score += Math.min(n.protein / Number(goals.protein), 1) * 3;
+      if (Number(goals.fibre) > 0) score += Math.min(n.fibre / Math.max(1, Number(goals.fibre) / 3), 1) * 2;
+      return score;
+    };
+    return list.sort((a, b) => b.rescues - a.rescues || preferenceScore(b) - preferenceScore(a) || b.score - a.score || a.missingIngredients.length - b.missingIngredients.length);
+  }, [items, focusItem, goals]);
 
   return (
     <>
       <SectionTitle kicker="Leads" title="Recipe suggestions">
-        Ranked by how many leftovers and soon-to-expire items each one rescues. Expired items are never used.
+        Prioritizes rescuing food before expiry, then your saved ingredient preferences. Estimated per-serving protein and fibre appear when nutrition estimates are enabled. Expired items are never used.
       </SectionTitle>
+      <FoodGoals goals={goals} onChange={onGoalsChange} items={items} shopping={shopping} onAddShopping={onAddShopping}/>
       {focusItem && (
         <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-yellow-400/40 bg-yellow-400/10 px-3 py-2 text-sm">
           <span>Following the trail of <strong>{focusItem.name}</strong></span>
@@ -2055,7 +2208,7 @@ function Recipes({ items, shopping, focusItem, clearFocus, onCook, onAddMissing,
         </EmptyState>
       ) : (
         <ul className="space-y-3">
-          {leads.map((r, i) => <RecipeCard key={r.id} recipe={r} index={i} shoppingNames={shoppingNames} onCook={onCook} onAddMissing={onAddMissing} />)}
+          {leads.map((r, i) => <RecipeCard key={r.id} recipe={r} index={i} shoppingNames={shoppingNames} onCook={onCook} onAddMissing={onAddMissing} showCalories={!!goals.showCalories} />)}
         </ul>
       )}
       <p className="mt-4 text-center font-mono text-[11px] text-slate-500">Local dataset of {RECIPES.length} recipes · salt, pepper and oil assumed in the pantry</p>
@@ -2074,7 +2227,7 @@ function CookModal({ recipe, onClose, onConfirm, onAddMissing }) {
         <Btn variant="ghost" onClick={onClose}>Not yet</Btn>
         <Btn variant="primary" onClick={() => onConfirm(recipe, chosen)} disabled={chosen.length === 0}>Cooked it · rescue {chosen.length}</Btn>
       </div>}>
-      <p className="text-sm text-[#74636A]">Tick the items you used up. They leave the fridge and count as rescued.</p>
+      <p className="text-sm text-[#74636A]">Tick only the items you actually used up. They leave the fridge and count as rescued. Check missing ingredients before cooking.</p>
       <ul className="mt-3 space-y-2">
         {recipe.usesItems.map(({ ingredient, item }) => (
           <li key={item.id}>
@@ -2408,11 +2561,17 @@ function App({ initialState }) {
 
   // Persist every change to the backend (debounced so rapid edits send one request).
   const saveTimer = useRef(null);
+  const saveQueue = useRef(Promise.resolve());
+  const initialRender = useRef(true);
   useEffect(() => {
+    if (initialRender.current) { initialRender.current = false; return; }
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveState(state).catch(() => toast('Could not reach the server. Changes not saved.'));
-    }, 300);
+      const snapshot = state;
+      saveQueue.current = saveQueue.current.catch(() => {}).then(() => saveState(snapshot))
+        .catch(() => toast('Save failed. Keep this tab open and check the connection.'));
+    }, 350);
+    return () => clearTimeout(saveTimer.current);
   }, [state]);
 
   // Clean up the celebration timer when the app unmounts.
@@ -2427,6 +2586,7 @@ function App({ initialState }) {
   };
 
   const { items, shopping } = state;
+  const goals = { ...DEFAULT_GOALS, ...(state.goals || {}) };
   const detailItem = items.find((i) => i.id === detailId) || null;
   const focusItem = items.find((i) => i.id === focusId) || null;
   const openCount = shopping.filter((s) => !s.checked).length;
@@ -2524,7 +2684,9 @@ function App({ initialState }) {
 
   const resetData = (mode) => setConfirm({
     title: mode === 'demo' ? 'Reload demo data?' : 'Start with an empty fridge?',
-    body: 'This replaces everything saved for this app: fridge, shopping list and stats.', danger: mode === 'empty',
+
+    body: 'This replaces the shared fridge, shopping list, goals and stats stored on this server.', danger: mode === 'empty',
+
     confirmLabel: mode === 'demo' ? 'Reload demo' : 'Empty it',
     onConfirm: () => { setState(mode === 'demo' ? makeSeed() : makeEmpty()); setFocusId(null); toast(mode === 'demo' ? 'Demo case files restored.' : 'Fridge cleared. Fresh start.'); },
   });
@@ -2537,7 +2699,7 @@ function App({ initialState }) {
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#FFF7EC]/90 backdrop-blur">
         <div className="caution-tape h-2" aria-hidden="true" />
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-xl" aria-hidden="true">🥦</div>
+          <div className="fg-header-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-xl" aria-hidden="true">🥦</div>
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-noir text-xl leading-tight text-slate-50">The Fridge Graveyard</h1>
             <p className="truncate font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">YOUR COZY FOOD RESCUE CLUB</p>
@@ -2550,7 +2712,7 @@ function App({ initialState }) {
 
       <main className="fg-main mx-auto max-w-5xl px-4 pt-5">
         {tab === 'scene' && <Dashboard items={items} onOpen={setDetailId} onAdd={() => setForm({ open: true, initial: null })} goRecipes={() => { setFocusId(null); goTab('recipes'); }} />}
-        {tab === 'recipes' && <Recipes items={items} shopping={shopping} focusItem={focusItem} clearFocus={() => setFocusId(null)} onCook={setCooking} onAddMissing={addMissing} goScene={() => goTab('scene')} />}
+        {tab === 'recipes' && <Recipes items={items} shopping={shopping} focusItem={focusItem} clearFocus={() => setFocusId(null)} onCook={setCooking} onAddMissing={addMissing} goScene={() => goTab('scene')} goals={goals} onGoalsChange={g=>setState(v=>({...v,goals:g}))} onAddShopping={addShopping} />}
         {tab === 'list' && <ShoppingList shopping={shopping} toast={toast} onAdd={(e) => { addShopping(e); toast(`${e[0].name} added.`); }}
           onToggle={(id) => setState((s) => ({ ...s, shopping: s.shopping.map((x) => x.id === id ? { ...x, checked: !x.checked } : x) }))}
           onRemove={(id) => setState((s) => ({ ...s, shopping: s.shopping.filter((x) => x.id !== id) }))}
@@ -2561,7 +2723,8 @@ function App({ initialState }) {
         {tab === 'premium' && <Premium openPaywall={setPaywall} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
-          Prototype · simulated data · saved by the local server
+
+          Prototype · simulated estimates · saved in this server’s shared SQLite database
         </footer>
       </main>
 
@@ -2572,6 +2735,7 @@ function App({ initialState }) {
           <span aria-hidden="true" className="text-lg leading-none">+</span> Add evidence
         </button>
       )}
+
 
       {/* Bottom navigation */}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-800 bg-[#FFF7EC]/95 backdrop-blur" aria-label="Main" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
@@ -2662,7 +2826,14 @@ function App({ initialState }) {
 // Fetch saved state from the backend first, then mount the app.
 function Root() {
   const [initial, setInitial] = useState(null);
-  useEffect(() => { loadState().then(setInitial); }, []);
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    let active = true;
+    loadState().then(v => { if (active) setInitial(v); }).catch(e => { if (active) setError(e.message); });
+    return () => { active = false; };
+  }, [retry]);
+  if (error) return <div className="min-h-screen grid place-items-center p-5"><div className="max-w-md rounded-2xl bg-white p-6 text-center text-purple-900"><h2 className="text-xl font-bold">Your fridge data is safe</h2><p className="my-4">{error}</p><button className="rounded-xl bg-lime-200 px-5 py-3" onClick={() => { setError(''); setRetry(n => n + 1); }}>Retry connection</button></div></div>;
   if (!initial) return <div className="min-h-screen grid place-items-center text-slate-400 font-mono">Opening the case files…</div>;
   return <App initialState={initial} />;
 }
