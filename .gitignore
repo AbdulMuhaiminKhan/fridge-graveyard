@@ -2,3 +2,4 @@
 __pycache__/
 backend/fridge.db
 .DS_Store
+.pytest_cache/

@@ -1014,6 +1014,37 @@ body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
 .fg-recipe-rescue-message strong{font-size:12px;max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fg-recipe-rescue-message span{font-size:11px;font-weight:600}
 @media(max-width:650px){.fg-recipe-mascot-avatar{width:50px;height:50px}.fg-recipe-mascot-emoji{font-size:31px}.fg-recipe-rescue-message strong{max-width:115px}}
+
+/* Extras: meal planner, household, feature cards */
+.fg-planner,.fg-household,.fg-extra-card{background:#fffdf7;border:2px solid #f2eafc;border-radius:28px;box-shadow:0 9px 24px rgba(77,49,121,.09);padding:22px;color:#51436a;margin-bottom:20px}
+.fg-planner h3,.fg-household h3{font:800 clamp(22px,4vw,28px)/1.15 'Baloo 2',sans-serif;color:#564078;margin:4px 0}
+.fg-planner-sub,.fg-household>p{font-size:13px;color:#7d6d8f}
+.fg-planner-summary{margin:12px 0 16px;padding:10px 14px;border-radius:16px;background:#eaf4c9;color:#4e5b3c;font-size:13px}
+.fg-plan-days{display:grid;gap:10px;list-style:none;padding:0;margin:0}
+.fg-plan-day{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:20px;background:#f5efff;border:2px solid #ebe1f8}
+.fg-plan-day.is-today{background:#fff3c8;border-color:#f1dfa3}
+.fg-plan-date{display:flex;flex-direction:column}.fg-plan-date strong{font:700 15px 'Fredoka',sans-serif;color:#59447a}.fg-plan-date span{font-size:11px;color:#8a7b9e}
+.fg-plan-title{font:700 16px/1.2 'Fredoka',sans-serif;color:#4d3778}.fg-plan-meta{font-size:11px;color:#8a7b9e;margin-top:2px}
+.fg-plan-uses{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.fg-plan-chip{font:600 11px 'Fredoka',sans-serif;padding:3px 8px;border-radius:99px;background:#fff;border:1px solid #e3d7f4;color:#5e4b80}
+.fg-chip-critical{background:#ffe2ec;border-color:#f5c2d2;color:#8a3e5a}.fg-chip-warning{background:#fff3c8;border-color:#efdc9a;color:#7a5f1c}
+.fg-plan-need{font-size:11px;color:#7d6d8f;margin-top:6px}
+.fg-plan-cook,.fg-plan-actions button,.fg-household button,.fg-extra-card button{background:#e4f06b;color:#4a4c36;border:2px solid #d5e35b;border-radius:14px;padding:8px 13px;font:600 12px 'Fredoka',sans-serif;box-shadow:0 3px 0 #c4d34b;white-space:nowrap}
+.fg-plan-warning{margin-top:14px;padding:10px 14px;border-radius:16px;background:#ffe2ec;color:#7d3b55;font-size:13px}
+.fg-plan-actions{margin-top:14px;font-size:13px;color:#577143}
+.fg-household-code{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:16px 0;padding:14px 18px;border-radius:20px;background:#f1e6ff}
+.fg-household-code span{font:700 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8060ad}
+.fg-household-code strong{font:800 30px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#4d3778}
+.fg-household-forms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fg-household-forms form{display:flex;align-items:flex-end;gap:8px}.fg-household-forms label{flex:1;min-width:0;font-size:12px;font-weight:700;color:#6d6081}
+.fg-household-forms input{display:block;width:100%;margin-top:4px;padding:9px 11px;font-weight:400}
+.fg-household-error{margin-top:8px;font-size:13px;color:#a34f60}
+.fg-scoreboard{margin-top:18px;padding:14px 16px;border-radius:20px;background:#f6f0fd}
+.fg-scoreboard-title{font:700 15px 'Fredoka',sans-serif;color:#59447a;margin-bottom:6px}.fg-scoreboard-empty{font-size:12px;color:#867693}
+.fg-scoreboard ol{list-style:none;padding:0;margin:0;display:grid;gap:6px}.fg-scoreboard li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;padding:8px 10px;background:#fff;border-radius:12px}
+.fg-extra-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.fg-extra-card{margin-bottom:0}.fg-extra-card>span{font-size:30px}.fg-extra-card h3{font:700 18px 'Fredoka',sans-serif;color:#4d3778;margin:6px 0 4px}.fg-extra-card p{font-size:13px;color:#7d6d8f;margin-bottom:12px}
+@media(max-width:650px){.fg-planner,.fg-household,.fg-extra-card{padding:16px}.fg-plan-day{grid-template-columns:1fr;gap:6px}.fg-plan-date{flex-direction:row;gap:8px;align-items:baseline}.fg-plan-cook{justify-self:start}.fg-household-forms,.fg-extra-cards{grid-template-columns:1fr}.fg-household-code strong{font-size:24px}}
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -1227,6 +1258,188 @@ const RECIPES = [
       { name: 'Milk', keys: ['milk', 'cream'], qty: 100, unit: 'ml' },
       { name: 'Bread', keys: ['bread', 'loaf', 'baguette'], qty: 2, unit: 'slice' },
     ] },
+  { id: 'r12', title: 'Undercover Chicken Wraps', time: 15, difficulty: 'Easy',
+    blurb: 'Chicken goes undercover in a tortilla with crunchy pepper and a cool yogurt sauce.',
+    ingredients: [
+      { name: 'Tortillas', keys: ['tortilla', 'wrap'], qty: 4, unit: 'pcs' },
+      { name: 'Chicken', keys: ['chicken'], qty: 250, unit: 'g' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Yogurt', keys: ['yogurt', 'yoghurt', 'skyr'], qty: 100, unit: 'g' },
+      { name: 'Spinach', keys: ['spinach'], qty: 50, unit: 'g' },
+    ] },
+  { id: 'r13', title: 'Banana Bread Breakout', time: 65, difficulty: 'Medium',
+    blurb: 'The spottier the bananas, the better the escape. Bakes while you do something else.',
+    ingredients: [
+      { name: 'Banana', keys: ['banana'], qty: 3, unit: 'pcs' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+      { name: 'Flour', keys: ['flour'], qty: 200, unit: 'g' },
+      { name: 'Butter', keys: ['butter'], qty: 80, unit: 'g' },
+      { name: 'Milk', keys: ['milk'], qty: 50, unit: 'ml' },
+    ] },
+  { id: 'r14', title: 'Cheese Toastie Confession', time: 10, difficulty: 'Easy',
+    blurb: 'Two slices of bread, one melty secret. It always talks under pressure.',
+    ingredients: [
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 4, unit: 'slice' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 100, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 1, unit: 'pcs' },
+      { name: 'Butter', keys: ['butter'], qty: 20, unit: 'g' },
+    ] },
+  { id: 'r15', title: 'Spinach & Mushroom Pasta Heist', time: 20, difficulty: 'Easy',
+    blurb: 'A quick creamy pasta that makes off with your spinach and mushrooms.',
+    ingredients: [
+      { name: 'Pasta', keys: ['pasta', 'penne', 'spaghetti', 'fusilli'], qty: 250, unit: 'g' },
+      { name: 'Spinach', keys: ['spinach'], qty: 100, unit: 'g' },
+      { name: 'Mushrooms', keys: ['mushroom'], qty: 200, unit: 'g' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 50, unit: 'g' },
+      { name: 'Cream', keys: ['cream'], qty: 100, unit: 'ml' },
+    ] },
+  { id: 'r16', title: 'Rice Pudding Plot', time: 30, difficulty: 'Easy',
+    blurb: 'Leftover rice simmered in milk until it forgets it was ever dinner.',
+    ingredients: [
+      { name: 'Cooked rice', keys: ['rice'], qty: 300, unit: 'g' },
+      { name: 'Milk', keys: ['milk'], qty: 400, unit: 'ml' },
+      { name: 'Banana', keys: ['banana'], qty: 1, unit: 'pcs' },
+      { name: 'Honey', keys: ['honey'], qty: 1, unit: 'tbsp' },
+    ] },
+  { id: 'r17', title: 'Veggie Lineup Omelette', time: 10, difficulty: 'Easy',
+    blurb: 'Line up the usual suspects, fold them into eggs, case closed in ten minutes.',
+    ingredients: [
+      { name: 'Eggs', keys: ['egg'], qty: 3, unit: 'pcs' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 40, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r18', title: 'Chickpea Curry Case', time: 30, difficulty: 'Easy',
+    blurb: 'A plant-based curry that soaks up tired spinach and soft tomatoes.',
+    ingredients: [
+      { name: 'Chickpeas', keys: ['chickpea'], qty: 400, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 3, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Spinach', keys: ['spinach'], qty: 100, unit: 'g' },
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+    ] },
+  { id: 'r19', title: 'Bruschetta Bust', time: 10, difficulty: 'Easy',
+    blurb: 'Soft tomatoes on garlicky toast. The evidence disappears fast.',
+    ingredients: [
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 4, unit: 'slice' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 3, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 1, unit: 'clove' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r20', title: 'Bolognese Quesadilla Crossover', time: 15, difficulty: 'Easy',
+    blurb: 'Two leftovers team up: bolognese meets tortillas and melted cheese.',
+    ingredients: [
+      { name: 'Leftover bolognese', keys: ['bolognese', 'ragu'], qty: 1, unit: 'portion' },
+      { name: 'Tortillas', keys: ['tortilla', 'wrap'], qty: 4, unit: 'pcs' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 100, unit: 'g' },
+    ] },
+  { id: 'r21', title: 'Creamy Tomato Pasta Sting', time: 20, difficulty: 'Easy',
+    blurb: 'Tomatoes past their prime become a silky sauce. Nobody suspects a thing.',
+    ingredients: [
+      { name: 'Pasta', keys: ['pasta', 'penne', 'spaghetti', 'fusilli'], qty: 250, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 4, unit: 'pcs' },
+      { name: 'Cream', keys: ['cream'], qty: 100, unit: 'ml' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r22', title: 'Yogurt Parfait Line-Up', time: 5, difficulty: 'Easy',
+    blurb: 'Layer yogurt, fruit and oats. Breakfast that rescues the fruit bowl.',
+    ingredients: [
+      { name: 'Yogurt', keys: ['yogurt', 'yoghurt', 'skyr'], qty: 200, unit: 'g' },
+      { name: 'Banana', keys: ['banana'], qty: 1, unit: 'pcs' },
+      { name: 'Oats', keys: ['oat'], qty: 50, unit: 'g' },
+      { name: 'Honey', keys: ['honey'], qty: 1, unit: 'tbsp' },
+      { name: 'Apple', keys: ['apple'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r23', title: 'Potato Hash Hideout', time: 25, difficulty: 'Easy',
+    blurb: 'Crispy potatoes hide the last of the veg. Top with a fried egg.',
+    ingredients: [
+      { name: 'Potatoes', keys: ['potato'], qty: 4, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+    ] },
+  { id: 'r24', title: 'Lentil Soup Stakeout', time: 35, difficulty: 'Easy',
+    blurb: 'A big pot that keeps for days and uses up carrots and tomatoes.',
+    ingredients: [
+      { name: 'Lentils', keys: ['lentil'], qty: 200, unit: 'g' },
+      { name: 'Carrots', keys: ['carrot'], qty: 2, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 2, unit: 'pcs' },
+    ] },
+  { id: 'r25', title: 'Salmon Rice Bowl Case', time: 20, difficulty: 'Easy',
+    blurb: 'Salmon over rice with crunchy cucumber. Fish waits for no one.',
+    ingredients: [
+      { name: 'Salmon', keys: ['salmon'], qty: 250, unit: 'g' },
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+      { name: 'Cucumber', keys: ['cucumber'], qty: 1, unit: 'pcs' },
+      { name: 'Soy sauce', keys: ['soy'], qty: 1, unit: 'tbsp' },
+      { name: 'Avocado', keys: ['avocado'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r26', title: 'Broccoli Cheese Bake', time: 35, difficulty: 'Medium',
+    blurb: 'Broccoli going yellow? Bury the evidence under a cheesy sauce.',
+    ingredients: [
+      { name: 'Broccoli', keys: ['broccoli'], qty: 400, unit: 'g' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 100, unit: 'g' },
+      { name: 'Milk', keys: ['milk'], qty: 200, unit: 'ml' },
+      { name: 'Flour', keys: ['flour'], qty: 20, unit: 'g' },
+      { name: 'Butter', keys: ['butter'], qty: 20, unit: 'g' },
+    ] },
+  { id: 'r27', title: 'Carrot & Apple Slaw Alibi', time: 10, difficulty: 'Easy',
+    blurb: 'Grated carrots and apple in a lemony yogurt dressing. Crunchy and quick.',
+    ingredients: [
+      { name: 'Carrots', keys: ['carrot'], qty: 3, unit: 'pcs' },
+      { name: 'Apple', keys: ['apple'], qty: 1, unit: 'pcs' },
+      { name: 'Yogurt', keys: ['yogurt', 'yoghurt', 'skyr'], qty: 100, unit: 'g' },
+      { name: 'Lemon', keys: ['lemon'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r28', title: 'Mushroom Risotto Mystery', time: 35, difficulty: 'Medium',
+    blurb: 'Slow-stirred rice that turns a box of mushrooms into dinner.',
+    ingredients: [
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+      { name: 'Mushrooms', keys: ['mushroom'], qty: 250, unit: 'g' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Garlic', keys: ['garlic'], qty: 2, unit: 'cloves' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 40, unit: 'g' },
+    ] },
+  { id: 'r29', title: 'Zucchini Fritter Fugitives', time: 20, difficulty: 'Easy',
+    blurb: 'Grated zucchini makes a run for it in crispy little fritters.',
+    ingredients: [
+      { name: 'Zucchini', keys: ['zucchini', 'courgette'], qty: 2, unit: 'pcs' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+      { name: 'Flour', keys: ['flour'], qty: 60, unit: 'g' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 50, unit: 'g' },
+    ] },
+  { id: 'r30', title: 'Bean & Pepper Chili Chase', time: 30, difficulty: 'Easy',
+    blurb: 'A plant-based chili that rounds up peppers, tomatoes and onions.',
+    ingredients: [
+      { name: 'Beans', keys: ['bean'], qty: 400, unit: 'g' },
+      { name: 'Tomatoes', keys: ['tomato'], qty: 3, unit: 'pcs' },
+      { name: 'Bell pepper', keys: ['bell pepper', 'pepper', 'paprika'], qty: 1, unit: 'pcs' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+      { name: 'Sweetcorn', keys: ['corn', 'sweetcorn'], qty: 150, unit: 'g' },
+      { name: 'Rice', keys: ['rice'], qty: 1, unit: 'cup' },
+    ] },
+  { id: 'r31', title: 'Tuna Melt Testimony', time: 10, difficulty: 'Easy',
+    blurb: 'Toast, tuna and melted cheese. A classic witness that never lies.',
+    ingredients: [
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 4, unit: 'slice' },
+      { name: 'Tuna', keys: ['tuna'], qty: 150, unit: 'g' },
+      { name: 'Cheese', keys: ['cheese', 'cheddar', 'mozzarella', 'parmesan', 'feta'], qty: 80, unit: 'g' },
+      { name: 'Onion', keys: ['onion'], qty: 1, unit: 'pcs' },
+    ] },
+  { id: 'r32', title: 'Avocado Toast Tip-Off', time: 10, difficulty: 'Easy',
+    blurb: 'Catch the avocado on its one perfect day, with an egg on top.',
+    ingredients: [
+      { name: 'Bread', keys: ['bread', 'loaf', 'baguette', 'toast'], qty: 2, unit: 'slice' },
+      { name: 'Avocado', keys: ['avocado'], qty: 1, unit: 'pcs' },
+      { name: 'Eggs', keys: ['egg'], qty: 2, unit: 'pcs' },
+      { name: 'Lemon', keys: ['lemon'], qty: 1, unit: 'pcs' },
+    ] },
 ];
 
 // Word-prefix match: "rice" matches "Cooked rice" but not "licorice".
@@ -1315,21 +1528,64 @@ function makeEmpty() {
 
 const API = '/api/state';
 
-// Load state from the Python backend. Falls back to demo data if nothing is saved yet.
-async function loadState() {
-  const res = await fetch(API, { cache: 'no-store' });
+// Each browser belongs to a household (a 6-character join code). A new browser gets its own
+// household automatically, so visitors never share a fridge unless they join the same code.
+const HOUSEHOLD_KEY = 'fg-household-code';
+const MEMBER_KEY = 'fg-member-name';
+const readLocal = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const writeLocal = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* private mode */ } };
+const cleanCode = (c) => String(c || '').replace(/[\s-]/g, '').toUpperCase();
+let householdCode = cleanCode(readLocal(HOUSEHOLD_KEY));
+
+class ConflictError extends Error {}
+
+async function createHousehold() {
+  const res = await fetch('/api/households', { method: 'POST' });
+  if (!res.ok) throw new Error(`Could not create a household: HTTP ${res.status}`);
+  householdCode = (await res.json()).code;
+  writeLocal(HOUSEHOLD_KEY, householdCode);
+  return householdCode;
+}
+
+async function fetchRemote() {
+  const res = await fetch(API, { cache: 'no-store', headers: { 'X-Household': householdCode } });
+  if (res.status === 404 || res.status === 400) return null; // unknown code (e.g. server was reset)
   if (!res.ok) throw new Error(`Load failed: HTTP ${res.status}`);
   const payload = await res.json();
   if (!Object.prototype.hasOwnProperty.call(payload, 'state')) throw new Error('Invalid server response');
-  if (payload.state === null) return makeSeed();
-  if (payload.state.version !== STATE_VERSION || !Array.isArray(payload.state.items)) throw new Error('Unsupported saved data. Nothing was overwritten.');
-  return payload.state;
+  return payload;
 }
-async function saveState(state) {
-  const res = await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
-  // Surface HTTP errors (including validation failures).
-  if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
 
+// Load this household's state. New households start with the demo fridge.
+async function loadState() {
+  if (!householdCode) await createHousehold();
+  let payload = await fetchRemote();
+  if (!payload) { await createHousehold(); payload = await fetchRemote(); }
+  if (!payload) throw new Error('Could not open a household on the server.');
+  if (payload.state === null) return { state: makeSeed(), version: payload.version, fresh: true };
+  if (payload.state.version !== STATE_VERSION || !Array.isArray(payload.state.items)) throw new Error('Unsupported saved data. Nothing was overwritten.');
+  return { state: payload.state, version: payload.version };
+}
+
+// Save and return the new version. 409 means another device in the household saved first.
+async function saveState(state, baseVersion) {
+  const res = await fetch(API, { method: 'PUT', body: JSON.stringify(state), headers: {
+    'Content-Type': 'application/json', 'X-Household': householdCode, 'X-Base-Version': String(baseVersion) } });
+  if (res.status === 409) throw new ConflictError('Household changed on another device');
+  if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
+  return (await res.json()).version;
+}
+
+async function checkHousehold(code) {
+  const res = await fetch('/api/households/' + encodeURIComponent(cleanCode(code)), { cache: 'no-store' });
+  if (res.status === 404) throw new Error('No household found with that code. Check it and try again.');
+  if (!res.ok) throw new Error('Enter the 6-character code from the other phone.');
+  return res.json();
+}
+
+async function fetchMemberStats() {
+  const res = await fetch('/api/stats/members', { cache: 'no-store', headers: { 'X-Household': householdCode } });
+  return res.ok ? res.json() : [];
 }
 
 /* =========================================================================
@@ -1934,7 +2190,9 @@ function FoodMascot({
   );
 }
 
-const DEFAULT_GOALS = { diet: 'any', avoid: [], protein: '', fibre: '', showCalories: false };
+const DEFAULT_GOALS = { diet: 'any', avoid: [], protein: '', fibre: '', showCalories: false, favourites: '', dislikes: '' };
+// "mushrooms, feta" -> ['mushroom', 'feta'] (simple plural trim so either form matches)
+const wordList = (text) => String(text || '').split(/[,;\n]/).map(w => w.trim().toLowerCase().replace(/(es|s)$/, '')).filter(w => w.length > 1);
 const ALLERGENS = ['milk','eggs','fish','shellfish','soy','wheat','peanuts','tree nuts','sesame'];
 const ALLERGEN_PATTERNS = {
  milk: /milk|cheese|yogurt|yoghurt|cream|butter|skyr/i, eggs: /\beggs?\b|mayonnaise/i,
@@ -1950,7 +2208,10 @@ function compatibleRecipe(recipe, goals) {
   const names = recipe.ingredients.map(i => i.name).join(' ') + ' ' + recipe.title;
   if ((goals.avoid || []).some(a => ALLERGEN_PATTERNS[a]?.test(names))) return false;
   // Leftovers (e.g. 'Leftover curry') have unknown contents, so they can't be cleared for a diet.
-  if (goals.diet !== 'any' && /leftover|curry|bolognese|ragu/i.test(names)) return false;
+  if (goals.diet !== 'any' && recipe.ingredients.some(i => /leftover|bolognese|ragu/i.test(i.name))) return false;
+  // Disliked ingredients are simply never suggested.
+  const ingredientNames = recipe.ingredients.map(i => i.name.toLowerCase()).join(' ');
+  if (wordList(goals.dislikes).some(w => ingredientNames.includes(w))) return false;
   if (goals.diet === 'vegan' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names) || ANIMAL_PATTERN.test(names))) return false;
   if (goals.diet === 'vegetarian' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names))) return false;
   if (goals.diet === 'pescatarian' && MEAT_PATTERN.test(names)) return false;
@@ -1960,6 +2221,7 @@ function compatibleRecipe(recipe, goals) {
 // Approximate calories for a full recipe, not a personal serving. Reference values
 // are generic food averages; exact brands, preparation, oil and portions vary.
 const KCAL_PER_100G = [
+  [/honey/,304], [/sweetcorn/,86],
   [/chicken/,165], [/bell pepper/,31], [/onion/,40], [/garlic/,149],
   [/soy sauce/,53], [/rice/,365], [/spinach/,23], [/tomato/,18],
   [/egg/,143], [/cheese|cheddar|mozzarella|parmesan|feta/,350],
@@ -1979,6 +2241,9 @@ const APPROX_GRAMS = {pcs:120, slice:35, slices:35, cup:180, portion:300,
 // Nutrition is a broad planning estimate based on reference ingredient quantities,
 // NOT the quantity actually stored in the fridge or a verified food label.
 const PROTEIN_PER_100G = [
+  [/potato/,2], [/carrot/,0.9], [/chickpea/,8.9], [/bean/,7], [/broccoli/,2.8], [/zucchini/,1.2],
+  [/cucumber/,0.7], [/lemon/,1.1], [/apple/,0.3], [/flour/,10], [/corn/,3.3], [/avocado/,2],
+  [/tuna/,26], [/shrimp|prawn/,24], [/butter/,0.9], [/cream/,2.1], [/honey/,0.3],
   [/chicken/,31], [/egg/,13], [/cheese|cheddar|mozzarella|parmesan|feta/,23],
   [/pasta|spaghetti|penne/,13], [/rice/,7], [/soy sauce/,8], [/bread|baguette|toast/,9],
   [/milk/,3.3], [/yogurt|yoghurt|skyr/,9], [/mushroom/,3.1], [/spinach/,2.9],
@@ -1987,13 +2252,17 @@ const PROTEIN_PER_100G = [
   [/pea/,5.4], [/salmon/,20], [/tofu/,12], [/lentil/,9], [/oat/,17]
 ];
 const FIBRE_PER_100G = [
+  [/tuna|shrimp|prawn|butter|cream/,0], [/honey/,0.2], [/potato/,2.2], [/carrot/,2.8], [/chickpea/,7.6],
+  [/bean/,6], [/broccoli/,2.6], [/zucchini/,1], [/cucumber/,0.5], [/lemon/,2.8], [/apple/,2.4],
+  [/flour/,2.7], [/corn/,2.4], [/avocado/,6.7],
   [/chicken|egg|cheese|milk|yogurt|yoghurt|skyr|salmon|soy sauce/,0],
   [/pasta|spaghetti|penne/,3], [/rice/,1.3], [/bread|baguette|toast/,2.7],
   [/mushroom/,1], [/spinach/,2.2], [/tomato/,1.2], [/bell pepper/,2.1],
   [/onion/,1.7], [/garlic/,2.1], [/banana/,2.6], [/tortilla|wrap/,3],
   [/curry|bolognese|ragu/,1.5], [/pea/,5.7], [/tofu/,1], [/lentil/,8], [/oat/,10]
 ];
-const RECIPE_SERVINGS = {r1:2,r2:2,r3:3,r4:3,r5:2,r6:2,r7:2,r8:2,r9:2,r10:2,r11:3};
+const RECIPE_SERVINGS = {r1:2,r2:2,r3:3,r4:3,r5:2,r6:2,r7:2,r8:2,r9:2,r10:2,r11:3,
+  r13:8,r16:3,r18:3,r24:4,r26:3,r27:3,r28:3,r29:3,r30:4};
 function estimateRecipeNutrition(recipe) {
   let calories = 0, protein = 0, fibre = 0;
   for (const ing of recipe.ingredients) {
@@ -2013,13 +2282,25 @@ function estimateRecipeNutrition(recipe) {
   return { servings, calories: Math.round(calories / servings / 25) * 25,
     protein: Math.round(protein / servings), fibre: Math.round(fibre / servings) };
 }
+// Secondary ranking after rescues: favourite ingredients, then protein / fibre goals.
+function preferenceScore(recipe, goals) {
+  const names = recipe.ingredients.map(i => i.name).join(' ').toLowerCase();
+  let score = wordList(goals.favourites).filter(w => names.includes(w)).length * 2;
+  const n = estimateRecipeNutrition(recipe);
+  if (n) {
+    if (Number(goals.protein) > 0) score += Math.min(n.protein / Number(goals.protein), 1) * 3;
+    if (Number(goals.fibre) > 0) score += Math.min(n.fibre / Math.max(1, Number(goals.fibre) / 3), 1) * 2;
+  }
+  return score;
+}
 function quantityLabel(ing) {
   return `${ing.qty} ${ing.unit}`;
 }
 function FoodGoals({ goals, onChange, items, shopping, onAddShopping }) {
   const [draft, setDraft] = useState(goals);
   const [saved, setSaved] = useState(false);
-  useEffect(() => { setDraft(goals); }, [goals]);
+  const goalsKey = JSON.stringify(goals);
+  useEffect(() => { setDraft(goals); }, [goalsKey]);
   const set = (k,v) => { setDraft(old => ({ ...old, [k]: v })); setSaved(false); };
   const dirty = JSON.stringify(draft) !== JSON.stringify(goals);
   const apply = () => { onChange(draft); setSaved(true); };
@@ -2041,6 +2322,10 @@ function FoodGoals({ goals, onChange, items, shopping, onAddShopping }) {
     <label className="block text-sm font-bold">Eating style<select className="mt-1 block w-full p-2" value={draft.diet} onChange={e=>set('diet',e.target.value)}>
       {['any','vegetarian','vegan','pescatarian','halal'].map(d=><option key={d} value={d}>{d==='any'?'No restriction':d[0].toUpperCase()+d.slice(1)}</option>)}
     </select></label>
+    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <label className="text-sm font-bold">Favourite ingredients<input type="text" placeholder="e.g. mushrooms, feta" value={draft.favourites||''} onChange={e=>set('favourites',e.target.value)} className="mt-1 w-full p-2 font-normal"/><span className="mt-1 block text-xs font-normal">Recipes with these move up the list.</span></label>
+      <label className="text-sm font-bold">Ingredients I don't like<input type="text" placeholder="e.g. tuna, avocado" value={draft.dislikes||''} onChange={e=>set('dislikes',e.target.value)} className="mt-1 w-full p-2 font-normal"/><span className="mt-1 block text-xs font-normal">Recipes with these are hidden.</span></label>
+    </div>
     <p className="mt-4 text-sm font-bold">Ingredients to avoid (preliminary keyword filtering)</p>
     <div className="mt-2 flex flex-wrap gap-2">{ALLERGENS.map(a=><label key={a} className="flex items-center gap-2 rounded-xl bg-purple-50 px-3 py-2 text-xs"><input type="checkbox" checked={(draft.avoid||[]).includes(a)} onChange={e=>set('avoid',e.target.checked?[...(draft.avoid||[]),a]:(draft.avoid||[]).filter(x=>x!==a))}/>{a}</label>)}</div>
     <div className="mt-4 grid grid-cols-2 gap-3"><label className="text-sm">Protein goal (g/meal)<input type="number" min="0" max="250" placeholder="e.g. 30" value={draft.protein||''} onChange={e=>set('protein',e.target.value)} className="mt-1 w-full p-2"/></label><label className="text-sm">Fibre goal (g/day)<input type="number" min="0" max="100" placeholder="e.g. 25" value={draft.fibre||''} onChange={e=>set('fibre',e.target.value)} className="mt-1 w-full p-2"/></label></div>
@@ -2180,15 +2465,7 @@ function Recipes({ items, shopping, focusItem, clearFocus, onCook, onAddMissing,
     let list = RECIPES.filter(r => compatibleRecipe(r, goals)).map((r) => analyzeRecipe(r, items)).filter((r) => r.usesItems.length > 0);
     if (focusItem) list = list.filter((r) => r.usesItems.some((u) => u.item.id === focusItem.id) || r.ingredients.some((ing) => matchesIngredient(focusItem, ing)));
     // Urgent food stays first. Nutrition is a secondary, approximate ingredient-based tie-breaker.
-    const preferenceScore = r => {
-      const n = estimateRecipeNutrition(r);
-      if (!n) return 0;
-      let score = 0;
-      if (Number(goals.protein) > 0) score += Math.min(n.protein / Number(goals.protein), 1) * 3;
-      if (Number(goals.fibre) > 0) score += Math.min(n.fibre / Math.max(1, Number(goals.fibre) / 3), 1) * 2;
-      return score;
-    };
-    return list.sort((a, b) => b.rescues - a.rescues || preferenceScore(b) - preferenceScore(a) || b.score - a.score || a.missingIngredients.length - b.missingIngredients.length);
+    return list.sort((a, b) => b.rescues - a.rescues || preferenceScore(b, goals) - preferenceScore(a, goals) || b.score - a.score || a.missingIngredients.length - b.missingIngredients.length);
   }, [items, focusItem, goals]);
 
   return (
@@ -2402,6 +2679,7 @@ function Stats({ state, onReset }) {
                 <span aria-hidden="true">{e.outcome === 'eaten' ? '✅' : '🪦'}</span>
                 <span className="min-w-0 flex-1 truncate text-slate-200">{e.name}
                   {e.demo && <span className="ml-2 rounded bg-slate-700 px-1 font-mono text-[9px] uppercase text-slate-300">demo</span>}
+                  {e.by && !e.demo && <span className="ml-2 text-xs text-slate-500">by {e.by}</span>}
                 </span>
                 <span className="font-mono text-[11px] text-slate-500">{fmtDate(e.date)}</span>
                 <span className={`w-14 text-right font-mono text-xs ${e.outcome === 'eaten' ? 'text-emerald-300' : 'text-zinc-400'}`}>{e.outcome === 'eaten' ? '+' : '−'}{euro(e.value)}</span>
@@ -2415,7 +2693,7 @@ function Stats({ state, onReset }) {
 
       <section className="mt-6 rounded-2xl border border-dashed border-slate-700 p-4">
         <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Evidence locker admin</p>
-        <p className="mt-1 text-sm text-slate-400">Data is stored in the Python backend (SQLite database).</p>
+        <p className="mt-1 text-sm text-slate-400">Data is stored in the Python backend (SQLite) under household code <strong>{householdCode}</strong>.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Btn onClick={() => onReset('demo')}>↺ Reload demo data</Btn>
           <Btn variant="danger" onClick={() => onReset('empty')}>Start with an empty fridge</Btn>
@@ -2426,112 +2704,188 @@ function Stats({ state, onReset }) {
 }
 
 /* =========================================================================
-   6. PREMIUM / MONETIZATION TEASER (mock — no real payments)
+   6. EXTRAS (all free): weekly meal planner, household syncing, who-ate-what
    ========================================================================= */
 
-const PLANS = [
-  { id: 'rookie', name: 'Rookie', price: '€0', period: 'forever', current: true,
-    perks: ['Unlimited fridge tracking', 'Recipe leads from your fridge', 'Shopping list', 'Waste & savings stats'] },
-  { id: 'detective', name: 'Detective', price: '€2.99', period: '/ month', note: 'or €24 / year',
-    perks: ['Everything in Rookie', 'Weekly meal planning around expiry dates', 'Personalized recipes (diet, allergies, taste)', 'Unlimited recipe library'] },
-  { id: 'agency', name: 'Household Agency', price: '€4.99', period: '/ month', note: 'up to 6 members', highlight: true,
-    perks: ['Everything in Detective', 'Household syncing across phones', 'Who-ate-what case notes', 'Opt-in grocery partner offers'] },
-];
+// Plan the next 7 dinners around expiry dates. Greedy: each day picks the recipe that rescues
+// the most urgent food still in date on that day; food used on one day can't be reused later.
+function planWeek(items, goals) {
+  let remaining = items.filter((i) => getStatus(i) !== 'expired');
+  const used = new Set();
+  const days = [];
+  for (let d = 0; d < 7; d++) {
+    remaining = remaining.filter((i) => daysLeft(i) >= d); // anything past its date by then is gone
+    const options = RECIPES.filter((r) => !used.has(r.id) && compatibleRecipe(r, goals))
+      .map((r) => analyzeRecipe(r, remaining))
+      .filter((r) => r.usesItems.length > 0)
+      .map((r) => {
+        const urgency = r.usesItems.reduce((sum, u) => {
+          const left = daysLeft(u.item) - d;
+          return sum + (left <= 1 ? 5 : left <= 3 ? 3 : 1) + (u.item.isLeftover ? 3 : 0);
+        }, 0);
+        return { ...r, planScore: urgency - r.missingIngredients.length * 0.75 + preferenceScore(r, goals) * 0.5 };
+      })
+      .sort((a, b) => b.planScore - a.planScore || a.missingIngredients.length - b.missingIngredients.length);
+    const pick = options[0] || null;
+    if (pick) {
+      used.add(pick.id);
+      // Long-life staples (sauces, grains, and anything with a week or more left, like eggs,
+      // cheese or onions) usually stretch over several meals, so only perishables get used up.
+      const ids = new Set(pick.usesItems.filter((u) => daysLeft(u.item) < 7
+        && !['Sauces & Condiments', 'Grains & Pasta'].includes(u.item.category)).map((u) => u.item.id));
+      remaining = remaining.filter((i) => !ids.has(i.id));
+    }
+    days.push({ offset: d, date: addDays(todayISO(), d), recipe: pick });
+  }
+  const planned = new Set(days.flatMap((day) => (day.recipe ? day.recipe.usesItems.map((u) => u.item.id) : [])));
+  const atRisk = items.filter((i) => getStatus(i) !== 'expired' && (['critical', 'warning'].includes(getStatus(i)) || i.isLeftover));
+  const uncovered = atRisk.filter((i) => !planned.has(i.id));
+  return { days, atRisk, uncovered };
+}
 
-const FEATURES = [
-  { icon: '🗓️', title: 'Meal planning', text: 'A weekly plan built around what expires first, so nothing gets forgotten at the back of the fridge.' },
-  { icon: '🏠', title: 'Household syncing', text: 'One shared fridge for flatmates or family. Everyone sees the same evidence and the same shopping list.' },
-  { icon: '🧑‍🍳', title: 'Personalized recipes', text: 'Recipes tuned to your diet, allergies, skill level and the time you actually have.' },
-  { icon: '🤝', title: 'Grocery partner offers', text: 'A few carefully chosen discounts on things you already buy. Opt-in only, and your data is never sold.' },
-];
+const dayLabel = (offset, iso) => offset === 0 ? 'Today' : offset === 1 ? 'Tomorrow'
+  : parseISO(iso).toLocaleDateString(undefined, { weekday: 'long' });
 
-function Premium({ openPaywall }) {
-  const [email, setEmail] = useState('');
-  const [err, setErr] = useState('');
-  const invite = (e) => {
-    e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setErr('Enter a valid email address.');
-    setErr('');
-    openPaywall({ reason: `Inviting ${email} to your household needs the Household Agency plan.`, plan: 'agency' });
-  };
+function MealPlanner({ items, goals, shopping, onCook, onAddShopping, toast }) {
+  const goalsKey = JSON.stringify(goals);
+  const plan = useMemo(() => planWeek(items, goals), [items, goalsKey]);
+  const openNames = new Set(shopping.filter((x) => !x.checked).map((x) => x.name.toLowerCase()));
+  const toBuy = [];
+  plan.days.forEach((day) => day.recipe && day.recipe.missingIngredients.forEach((ing) => {
+    const key = ing.name.toLowerCase();
+    if (openNames.has(key) || toBuy.some((t) => t.name.toLowerCase() === key)) return;
+    toBuy.push({ name: ing.name, quantity: ing.qty, unit: ing.unit, source: `Meal plan: ${day.recipe.title}` });
+  }));
+  const saved = plan.atRisk.length - plan.uncovered.length;
 
   return (
-    <>
-      <div className="mb-4 flex items-center gap-2 rounded-xl border border-yellow-400/50 bg-yellow-400/10 px-3 py-2 text-xs text-yellow-200" role="note">
-        <span aria-hidden="true">⚠️</span> Prototype preview. Prices are mock-ups and no real payments are processed.
+    <section className="fg-planner" aria-labelledby="planner-h">
+      <span className="fg-eyebrow">🗓️ WEEKLY RESCUE PLAN</span>
+      <h3 id="planner-h">Your next 7 dinners</h3>
+      <p className="fg-planner-sub">Built around what expires first, and your food goals. It updates whenever the fridge changes.</p>
+      <p className="fg-planner-summary">{plan.atRisk.length
+        ? <>This plan rescues <strong>{saved} of {plan.atRisk.length}</strong> at-risk items before they expire.</>
+        : <>Nothing is at risk right now, so the plan simply uses what you have.</>}</p>
+      <ol className="fg-plan-days">
+        {plan.days.map((day) => (
+          <li key={day.date} className={`fg-plan-day ${day.offset === 0 ? 'is-today' : ''}`}>
+            <div className="fg-plan-date"><strong>{dayLabel(day.offset, day.date)}</strong><span>{parseISO(day.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span></div>
+            {day.recipe ? (
+              <div className="fg-plan-body">
+                <p className="fg-plan-title">{day.recipe.title}</p>
+                <p className="fg-plan-meta">{day.recipe.time} min · {day.recipe.difficulty}</p>
+                <p className="fg-plan-uses">{day.recipe.usesItems.map((u) => (
+                  <span key={u.item.id} className={`fg-plan-chip fg-chip-${getStatus(u.item)}`}>{u.item.name}</span>
+                ))}</p>
+                <p className="fg-plan-need">{day.recipe.missingIngredients.length ? `Need: ${day.recipe.missingIngredients.map((m) => m.name).join(', ')}` : '✓ Nothing to buy'}</p>
+              </div>
+            ) : (
+              <div className="fg-plan-body"><p className="fg-plan-title">Free night</p><p className="fg-plan-meta">Nothing left to rescue, so cook whatever you fancy.</p></div>
+            )}
+            {day.recipe && <button type="button" className="fg-plan-cook" onClick={() => onCook(analyzeRecipe(day.recipe, items))}>🍳 Cook</button>}
+          </li>
+        ))}
+      </ol>
+      {plan.uncovered.length > 0 && (
+        <p className="fg-plan-warning">⚠️ Not in any recipe: <strong>{plan.uncovered.map((i) => i.name).join(', ')}</strong>. Freeze them or eat them on their own.</p>
+      )}
+      <div className="fg-plan-actions">
+        {toBuy.length
+          ? <button type="button" onClick={() => { onAddShopping(toBuy); toast(`${plural(toBuy.length, 'ingredient')} for this week added to the list.`); }}>🛒 Add {plural(toBuy.length, 'missing ingredient')} to the list</button>
+          : <span>✓ You already have (or listed) everything for this week.</span>}
       </div>
-      <SectionTitle kicker="Agency edition" title="Fridge Graveyard Premium">
-        Core waste tracking stays free. Premium adds tools for planning ahead and for shared households.
-      </SectionTitle>
-
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {FEATURES.map((f) => (
-          <li key={f.title} className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-2xl" aria-hidden="true">{f.icon}</span>
-              <span className="rounded-full border border-yellow-400/40 px-2 py-0.5 font-mono text-[10px] uppercase text-yellow-300">🔒 Premium</span>
-            </div>
-            <h3 className="mt-2 font-semibold text-slate-100">{f.title}</h3>
-            <p className="mt-1 text-sm text-slate-400">{f.text}</p>
-          </li>
-        ))}
-      </ul>
-
-      <h3 className="mb-3 mt-6 font-mono text-[11px] uppercase tracking-[0.2em] text-slate-400">Plans (mock pricing)</h3>
-      <ul className="grid gap-3 sm:grid-cols-3">
-        {PLANS.map((p) => (
-          <li key={p.id} className={`relative flex flex-col rounded-2xl border p-4 ${p.highlight ? 'border-yellow-400 bg-yellow-400/5' : 'border-slate-800 bg-slate-900/80'}`}>
-            {p.highlight && <span className="absolute -top-2.5 right-3 rounded-full bg-yellow-400 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase text-slate-950">Best for flatshares</span>}
-            <p className="font-noir text-lg text-slate-50">{p.name}</p>
-            <p className="mt-1"><span className="font-mono text-2xl font-semibold text-slate-50">{p.price}</span> <span className="text-sm text-slate-400">{p.period}</span></p>
-            {p.note && <p className="font-mono text-[11px] text-slate-500">{p.note}</p>}
-            <ul className="mt-3 flex-1 space-y-1.5 text-sm text-slate-300">
-              {p.perks.map((perk) => <li key={perk} className="flex gap-2"><span className="text-emerald-400" aria-hidden="true">✓</span>{perk}</li>)}
-            </ul>
-            {p.current
-              ? <Btn className="mt-4" disabled>Current plan</Btn>
-              : <Btn variant={p.highlight ? 'primary' : 'secondary'} className="mt-4" onClick={() => openPaywall({ reason: `You picked the ${p.name} plan.`, plan: p.id })}>Choose {p.name}</Btn>}
-          </li>
-        ))}
-      </ul>
-
-      <section className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/80 p-4" aria-labelledby="invite-h">
-        <h3 id="invite-h" className="font-semibold text-slate-100">🏠 Invite your household</h3>
-        <p className="mt-1 text-sm text-slate-400">Share one fridge with flatmates or family. Everyone gets the same alerts and list.</p>
-        <form onSubmit={invite} className="mt-3 flex flex-wrap gap-2" noValidate>
-          <label className="min-w-0 flex-[1_1_12rem]"><span className="sr-only">Email address</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="flatmate@example.com"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none" />
-          </label>
-          <Btn variant="primary" type="submit">Send invite</Btn>
-        </form>
-        {err && <p role="alert" className="mt-2 text-sm text-red-300">{err}</p>}
-      </section>
-    </>
+    </section>
   );
 }
 
-function PaywallModal({ paywall, onClose, onStartTrial }) {
-  if (!paywall) return null;
-  const plan = PLANS.find((p) => p.id === paywall.plan) || PLANS[2];
+function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }) {
+  const [name, setName] = useState(memberName);
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [board, setBoard] = useState(null);
+  // Who-ate-what scoreboard from the backend (refreshes after cases are closed).
+  useEffect(() => {
+    const t = setTimeout(() => fetchMemberStats().then(setBoard).catch(() => setBoard([])), 800);
+    return () => clearTimeout(t);
+  }, [logLength]);
+
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(householdCode); toast('Household code copied. Send it to your flatmates.'); }
+    catch (e) { toast(`Your household code is ${householdCode}`); }
+  };
+  const saveName = (e) => { e.preventDefault(); onSaveName(name); toast(name.trim() ? `Nice to meet you, ${name.trim()}.` : 'Name cleared.'); };
+  const join = async (e) => {
+    e.preventDefault();
+    const c = cleanCode(code);
+    if (!/^[A-Z0-9]{6}$/.test(c)) return setErr('Codes are 6 letters and numbers, like K7QM2P.');
+    if (c === householdCode) return setErr('That is already your household.');
+    setBusy(true); setErr('');
+    try {
+      const info = await checkHousehold(c);
+      askConfirm({
+        title: `Join household ${info.code}?`,
+        body: `You will switch to that shared fridge (${plural(info.items, 'item')}). Your current fridge stays saved under code ${householdCode}, so note it down if you want to come back.`,
+        confirmLabel: 'Join household',
+        onConfirm: () => { writeLocal(HOUSEHOLD_KEY, info.code); window.location.reload(); },
+      });
+    } catch (e2) { setErr(e2.message); } finally { setBusy(false); }
+  };
+
   return (
-    <Modal open onClose={onClose} kicker="Restricted area · Premium" title={`Unlock ${plan.name}`}
-      footer={<div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <Btn variant="ghost" onClick={onClose}>Maybe later</Btn>
-        <Btn variant="primary" onClick={onStartTrial} data-autofocus>Start 14-day free trial (mock)</Btn>
-      </div>}>
-      <div className="text-center">
-        <p className="text-5xl" aria-hidden="true">🔒</p>
-        <p className="mt-3 text-slate-200">{paywall.reason}</p>
-        <p className="mt-3"><span className="font-mono text-3xl font-semibold text-slate-50">{plan.price}</span> <span className="text-slate-400">{plan.period}</span></p>
+    <section className="fg-household" aria-labelledby="household-h">
+      <span className="fg-eyebrow">🏠 HOUSEHOLD SYNCING</span>
+      <h3 id="household-h">Share one fridge</h3>
+      <p>Everyone who uses this code sees the same fridge, shopping list and stats. Changes appear on the other phones within a few seconds.</p>
+      <div className="fg-household-code">
+        <span>Your household code</span>
+        <strong aria-label={`Household code ${householdCode.split('').join(' ')}`}>{householdCode}</strong>
+        <button type="button" onClick={copy}>📋 Copy</button>
       </div>
-      <ul className="mt-4 space-y-1.5 text-sm text-slate-300">
-        {plan.perks.map((perk) => <li key={perk} className="flex gap-2"><span className="text-emerald-400" aria-hidden="true">✓</span>{perk}</li>)}
-      </ul>
-      <p className="mt-4 rounded-lg border border-yellow-400/40 bg-yellow-400/10 px-3 py-2 text-xs text-yellow-200">
-        This is a prototype. No payment details are collected, nothing is charged, and no invites are sent.
-      </p>
-    </Modal>
+      <div className="fg-household-forms">
+        <form onSubmit={saveName}>
+          <label>Your name (for who-ate-what)<input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="e.g. Abdul" /></label>
+          <button type="submit">Save name</button>
+        </form>
+        <form onSubmit={join} noValidate>
+          <label>Join another household<input value={code} maxLength={8} onChange={(e) => { setCode(e.target.value); setErr(''); }} placeholder="Code from a flatmate" autoCapitalize="characters" /></label>
+          <button type="submit" disabled={busy}>{busy ? 'Checking…' : 'Join'}</button>
+        </form>
+      </div>
+      {err && <p role="alert" className="fg-household-error">{err}</p>}
+      <div className="fg-scoreboard">
+        <p className="fg-scoreboard-title">🕵️ Who ate what</p>
+        {board === null ? <p className="fg-scoreboard-empty">Loading…</p>
+          : board.length === 0 ? <p className="fg-scoreboard-empty">No cases closed yet. Mark something as eaten and your name shows up here.</p>
+          : <ol>{board.map((m, i) => (
+              <li key={m.name}><span>{i === 0 && m.rescued > 0 ? '🏆' : '🔎'} {m.name}</span><span>✅ {m.rescued} rescued · 🪦 {m.wasted} wasted</span></li>
+            ))}</ol>}
+      </div>
+    </section>
+  );
+}
+
+function Extras({ items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
+  return (
+    <>
+      <SectionTitle kicker="All included" title="Extras">Meal planning, household sharing and personal recipes. Everything here is free.</SectionTitle>
+      <MealPlanner items={items} goals={goals} shopping={shopping} onCook={onCook} onAddShopping={onAddShopping} toast={toast} />
+      <HouseholdPanel memberName={memberName} onSaveName={onSaveName} toast={toast} askConfirm={askConfirm} logLength={logLength} />
+      <div className="fg-extra-cards">
+        <section className="fg-extra-card">
+          <span aria-hidden="true">🧑‍🍳</span>
+          <h3>Personalized recipes</h3>
+          <p>Set your eating style, allergies, favourite and disliked ingredients, and protein or fibre goals. Recipes and the meal plan follow them.</p>
+          <button type="button" onClick={goRecipes}>Set my food goals →</button>
+        </section>
+        <section className="fg-extra-card">
+          <span aria-hidden="true">📚</span>
+          <h3>Recipe library</h3>
+          <p>{RECIPES.length} rescue recipes, from 5-minute smoothies to a slow banana bread, each with estimated nutrition.</p>
+          <button type="button" onClick={goRecipes}>Browse recipes →</button>
+        </section>
+      </div>
+    </>
   );
 }
 
@@ -2544,11 +2898,14 @@ const TABS = [
   { id: 'recipes', label: 'Recipes', icon: '🍳' },
   { id: 'list', label: 'List', icon: '🛒' },
   { id: 'stats', label: 'Stats', icon: '📁' },
-  { id: 'premium', label: 'Premium', icon: '⭐' },
+  { id: 'extras', label: 'Extras', icon: '⭐' },
 ];
 
-function App({ initialState }) {
+function App({ initialState, initialVersion, initialFresh }) {
   const [state, setState] = useState(initialState);
+  const [memberName, setMemberName] = useState(() => readLocal(MEMBER_KEY));
+  const memberRef = useRef(memberName);
+  memberRef.current = memberName;
   const [tab, setTab] = useState('scene');
   const [detailId, setDetailId] = useState(null);
   const [form, setForm] = useState({ open: false, initial: null });
@@ -2556,25 +2913,64 @@ function App({ initialState }) {
   const [rescueCelebration, setRescueCelebration] = useState(null);
   const rescueTimer = useRef(null);
   const [confirm, setConfirm] = useState(null);
-  const [paywall, setPaywall] = useState(null);
   const [focusId, setFocusId] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
   const toastTimer = useRef(null);
 
   // Persist every change to the backend (debounced so rapid edits send one request).
+  // Saves carry the version they are based on; remote changes from household members are
+  // pulled in every few seconds while nothing local is waiting to be saved.
   const saveTimer = useRef(null);
   const saveQueue = useRef(Promise.resolve());
-  const initialRender = useRef(true);
+  const versionRef = useRef(initialVersion || 0);
+  const skipSave = useRef(!initialFresh);   // loaded state is already saved; a new demo fridge is not
+  const changeSeq = useRef(0);
+  const savedSeq = useRef(0);
+
+  const applyRemote = (payload, message) => {
+    if (!payload) return;
+    versionRef.current = payload.version;
+    if (payload.state && payload.state.version === STATE_VERSION) {
+      skipSave.current = true;
+      setState(payload.state);
+      if (message) toast(message);
+    }
+  };
+
   useEffect(() => {
-    if (initialRender.current) { initialRender.current = false; return; }
+    if (skipSave.current) { skipSave.current = false; return; }
+    const seq = ++changeSeq.current;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       const snapshot = state;
-      saveQueue.current = saveQueue.current.catch(() => {}).then(() => saveState(snapshot))
-        .catch(() => toast('Save failed. Keep this tab open and check the connection.'));
+      saveQueue.current = saveQueue.current.catch(() => {})
+        .then(() => saveState(snapshot, versionRef.current))
+        .then((v) => { versionRef.current = v; savedSeq.current = Math.max(savedSeq.current, seq); })
+        .catch(async (e) => {
+          if (e instanceof ConflictError) {
+            savedSeq.current = changeSeq.current;
+            applyRemote(await fetchRemote().catch(() => null), 'Someone in your household changed the fridge at the same time. Showing the latest version; please redo your last change if it is missing.');
+          } else toast('Save failed. Keep this tab open and check the connection.');
+        });
     }, 350);
     return () => clearTimeout(saveTimer.current);
   }, [state]);
+
+  // Household syncing: pull changes made on other phones.
+  useEffect(() => {
+    const pull = async () => {
+      if (document.visibilityState !== 'visible' || savedSeq.current < changeSeq.current) return;
+      const payload = await fetchRemote().catch(() => null);
+      if (payload && payload.version > versionRef.current && savedSeq.current >= changeSeq.current) {
+        applyRemote(payload, 'Fridge updated from your household.');
+      }
+    };
+    const timer = setInterval(pull, 8000);
+    document.addEventListener('visibilitychange', pull);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', pull); };
+  }, []);
+
+  const saveMemberName = (name) => { const n = name.trim().slice(0, 40); setMemberName(n); writeLocal(MEMBER_KEY, n); };
 
   // Clean up the celebration timer when the app unmounts.
   useEffect(() => {
@@ -2609,7 +3005,7 @@ function App({ initialState }) {
   const closeCases = (list, outcome) => {
     const ids = new Set(list.map((i) => i.id));
     setState((s) => {
-      const entries = list.map((i) => ({ id: uid(), name: i.name, outcome, category: i.category, date: todayISO(), value: catMeta(i.category).price }));
+      const entries = list.map((i) => ({ id: uid(), name: i.name, outcome, category: i.category, date: todayISO(), value: catMeta(i.category).price, by: memberRef.current || 'Someone' }));
       const value = entries.reduce((a, e) => a + e.value, 0);
       const stats = { ...s.stats };
       if (outcome === 'eaten') { stats.rescued += list.length; stats.moneySaved += value; }
@@ -2687,7 +3083,7 @@ function App({ initialState }) {
   const resetData = (mode) => setConfirm({
     title: mode === 'demo' ? 'Reload demo data?' : 'Start with an empty fridge?',
 
-    body: 'This replaces the shared fridge, shopping list, goals and stats stored on this server.', danger: mode === 'empty',
+    body: 'This replaces your household’s fridge, shopping list, goals and stats for everyone in it.', danger: mode === 'empty',
 
     confirmLabel: mode === 'demo' ? 'Reload demo' : 'Empty it',
     onConfirm: () => { setState(mode === 'demo' ? makeSeed() : makeEmpty()); setFocusId(null); toast(mode === 'demo' ? 'Demo case files restored.' : 'Fridge cleared. Fresh start.'); },
@@ -2722,11 +3118,12 @@ function App({ initialState }) {
           onClearAll={() => setConfirm({ title: 'Clear the whole list?', body: 'Every item on the shopping list will be removed.', danger: true, confirmLabel: 'Clear all',
             onConfirm: () => { setState((s) => ({ ...s, shopping: [] })); toast('Shopping list cleared.'); } })} />}
         {tab === 'stats' && <Stats state={state} onReset={resetData} />}
-        {tab === 'premium' && <Premium openPaywall={setPaywall} />}
+        {tab === 'extras' && <Extras items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
+          goRecipes={() => { setFocusId(null); goTab('recipes'); }} memberName={memberName} onSaveName={saveMemberName} askConfirm={setConfirm} logLength={state.log.length} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
 
-          Prototype · simulated estimates · saved in this server’s shared SQLite database
+          Prototype · simulated estimates · household {householdCode || '…'} · saved in SQLite
         </footer>
       </main>
 
@@ -2767,8 +3164,6 @@ function App({ initialState }) {
         onFindRecipes={(item) => { setDetailId(null); setFocusId(item.id); goTab('recipes'); }} />
       <ItemFormModal open={form.open} initial={form.initial} onClose={() => setForm({ open: false, initial: null })} onSave={saveItem} />
       <CookModal recipe={cooking} onClose={() => setCooking(null)} onConfirm={cookConfirm} onAddMissing={(r) => addMissing(r)} />
-      <PaywallModal paywall={paywall} onClose={() => setPaywall(null)}
-        onStartTrial={() => { setPaywall(null); toast('Prototype: no payment taken and no invite sent.'); }} />
       <ConfirmModal confirm={confirm} onClose={() => setConfirm(null)} />
       
       {/* Happy rescue celebration */}
@@ -2837,7 +3232,7 @@ function Root() {
   }, [retry]);
   if (error) return <div className="min-h-screen grid place-items-center p-5"><div className="max-w-md rounded-2xl bg-white p-6 text-center text-purple-900"><h2 className="text-xl font-bold">Your fridge data is safe</h2><p className="my-4">{error}</p><button className="rounded-xl bg-lime-200 px-5 py-3" onClick={() => { setError(''); setRetry(n => n + 1); }}>Retry connection</button></div></div>;
   if (!initial) return <div className="min-h-screen grid place-items-center text-slate-400 font-mono">Opening the case files…</div>;
-  return <App initialState={initial} />;
+  return <App initialState={initial.state} initialVersion={initial.version} initialFresh={!!initial.fresh} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<Root />);

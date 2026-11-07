@@ -35,15 +35,48 @@ uvicorn backend.main:app --reload
 
 Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
 
+## Features
+
+- **Fridge:** track items by expiry, with a daily rescue mission and suggested actions.
+- **Recipes:** 32 rescue recipes ranked by how much at-risk food they use, with estimated nutrition.
+- **Food goals:** eating style, allergies, favourite and disliked ingredients, protein and fibre goals.
+- **Extras (all free):**
+  - Weekly meal planner that plans 7 dinners around expiry dates and builds one shopping list.
+  - Household syncing: share one fridge with flatmates using a 6-character household code.
+  - Who-ate-what: every eaten or wasted item records who closed it, with a household scoreboard.
+- **Shopping list** and **stats** (rescue rate, money saved).
+
+## Households
+
+Every browser gets its own household on first visit, so visitors never see each other's fridge.
+The code is shown on the Extras tab. Entering a flatmate's code joins their fridge, and changes
+sync to the other phones within a few seconds. If two people save at the same moment, the later
+save is rejected (HTTP 409) and that phone reloads the latest version instead of overwriting it.
+
+When upgrading from the old single-fridge version, the first browser that opens the app keeps
+the existing saved fridge.
+
 ## API
 
-| Method | Path            | What it does                                  |
-|--------|-----------------|-----------------------------------------------|
-| GET    | `/api/state`    | Load the whole app state (null if none saved) |
-| PUT    | `/api/state`    | Save the whole app state                      |
-| DELETE | `/api/state`    | Wipe saved state (app reloads demo data)      |
-| GET    | `/api/items`    | List fridge items                             |
-| GET    | `/api/shopping` | List the shopping list                        |
-| GET    | `/api/stats`    | Rescued / wasted stats                        |
+All state endpoints need the household code in an `X-Household` header.
 
-The frontend loads state from `/api/state` on start and saves it back (debounced) after every change.
+| Method | Path                       | What it does                                              |
+|--------|----------------------------|-----------------------------------------------------------|
+| POST   | `/api/households`          | Create a household and return its code                    |
+| GET    | `/api/households/{code}`   | Check a code before joining (item count, last update)     |
+| GET    | `/api/state`               | Load the household's state and its version                |
+| PUT    | `/api/state`               | Save the state (`X-Base-Version` guards against overwrites)|
+| DELETE | `/api/state`               | Wipe this household's state (app reloads demo data)       |
+| GET    | `/api/items`               | List fridge items                                         |
+| GET    | `/api/shopping`            | List the shopping list                                    |
+| GET    | `/api/stats`               | Rescued / wasted stats                                    |
+| GET    | `/api/stats/members`       | Who-ate-what scoreboard per household member              |
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+The tests use a temporary database, so your own `fridge.db` is never touched.
