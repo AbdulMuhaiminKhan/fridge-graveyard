@@ -394,7 +394,9 @@ async function loadState() {
 }
 
 async function saveState(state) {
-  await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
+  const res = await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state) });
+  // fetch() only rejects on network errors; surface HTTP errors (e.g. 400 validation) too.
+  if (!res.ok) throw new Error('Save failed: HTTP ' + res.status);
 }
 
 /* =========================================================================

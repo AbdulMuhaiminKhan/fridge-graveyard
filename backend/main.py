@@ -7,9 +7,10 @@ Run:  uvicorn backend.main:app --reload   (from the project root)
 """
 import json
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterator
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -21,10 +22,48 @@ DB_PATH = BASE_DIR / "backend" / "fridge.db"
 app = FastAPI(title="Fridge Graveyard API")
 
 
-def get_db() -> sqlite3.Connection:
+@contextmanager
+def get_db() -> Iterator[sqlite3.Connection]:
+    """Open a connection, commit on success / roll back on error, and ALWAYS close it.
+
+    sqlite3's own `with conn:` only commits or rolls back - it never closes the
+    connection, which previously leaked one connection per request.
+    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        with conn:
+            yield conn
+    finally:
+        conn.close()
+
+
+def validate_state(state: Dict[str, Any]) -> None:
+    """Reject structurally invalid state before it is persisted."""
+    items = state.get("items")
+    if not isinstance(items, list):
+        raise HTTPException(status_code=400, detail="state.items must be a list")
+    if not all(isinstance(i, dict) for i in items):
+        raise HTTPException(status_code=400, detail="every entry in state.items must be an object")
+
+    shopping = state.get("shopping")
+    if shopping is not None:
+        if not isinstance(shopping, list):
+            raise HTTPException(status_code=400, detail="state.shopping must be a list")
+        if not all(isinstance(s, dict) for s in shopping):
+            raise HTTPException(status_code=400, detail="every entry in state.shopping must be an object")
+
+    log = state.get("log")
+    if log is not None and not isinstance(log, list):
+        raise HTTPException(status_code=400, detail="state.log must be a list")
+
+    stats = state.get("stats")
+    if stats is not None:
+        if not isinstance(stats, dict):
+            raise HTTPException(status_code=400, detail="state.stats must be an object")
+        for key, value in stats.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise HTTPException(status_code=400, detail=f"state.stats.{key} must be a number")
 
 
 def init_db() -> None:
@@ -60,8 +99,7 @@ def get_state():
 
 @app.put("/api/state")
 def save_state(state: Dict[str, Any]):
-    if not isinstance(state.get("items"), list):
-        raise HTTPException(status_code=400, detail="state.items must be a list")
+    validate_state(state)
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
         conn.execute(
