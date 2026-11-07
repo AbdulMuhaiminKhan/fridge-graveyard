@@ -994,7 +994,7 @@ body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
 .fg-freeze-button:disabled { color:#45677a!important; }
 @media(min-width:900px){ .fg-stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));} }
 @media(max-width:899px){ .fg-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
-@media(max-width:650px){ .fg-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:650px){ .fg-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .fg-stat-deceased{grid-column:1 / -1;min-height:auto;flex-direction:row;gap:10px;} }
 
 
 /* Final release refinements */
@@ -1949,6 +1949,8 @@ const ANIMAL_PATTERN = /milk|cheese|yogurt|yoghurt|cream|butter|egg|honey|gelati
 function compatibleRecipe(recipe, goals) {
   const names = recipe.ingredients.map(i => i.name).join(' ') + ' ' + recipe.title;
   if ((goals.avoid || []).some(a => ALLERGEN_PATTERNS[a]?.test(names))) return false;
+  // Leftovers (e.g. 'Leftover curry') have unknown contents, so they can't be cleared for a diet.
+  if (goals.diet !== 'any' && /leftover|curry|bolognese|ragu/i.test(names)) return false;
   if (goals.diet === 'vegan' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names) || ANIMAL_PATTERN.test(names))) return false;
   if (goals.diet === 'vegetarian' && (MEAT_PATTERN.test(names) || FISH_PATTERN.test(names))) return false;
   if (goals.diet === 'pescatarian' && MEAT_PATTERN.test(names)) return false;
@@ -2035,7 +2037,7 @@ function FoodGoals({ goals, onChange, items, shopping, onAddShopping }) {
     .slice(0, 8);
   return <details className="mb-5 rounded-3xl border-2 border-purple-100 bg-[#fffdf7] p-5 text-[#493b61]">
     <summary className="cursor-pointer font-display text-xl font-bold">🥗 My food goals & preferences</summary>
-    <p className="my-3 text-sm">Optional preferences. Food rescue remains the priority. This is a prototype: recipes are not certified allergen-free or halal, and nutrient amounts are not calculated.</p>
+    <p className="my-3 text-sm">Optional preferences. Food rescue remains the priority. This is a prototype: recipes are not certified allergen-free or halal, and any nutrition figures are rough estimates.</p>
     <label className="block text-sm font-bold">Eating style<select className="mt-1 block w-full p-2" value={draft.diet} onChange={e=>set('diet',e.target.value)}>
       {['any','vegetarian','vegan','pescatarian','halal'].map(d=><option key={d} value={d}>{d==='any'?'No restriction':d[0].toUpperCase()+d.slice(1)}</option>)}
     </select></label>
@@ -2830,7 +2832,7 @@ function Root() {
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     let active = true;
-    loadState().then(v => { if (active) setInitial(v); }).catch(e => { if (active) setError(e.message); });
+    loadState().then(v => { if (active) setInitial(v); }).catch(e => { if (active) setError(e instanceof TypeError ? 'Could not reach the server. Make sure the backend is running, then retry.' : e.message); });
     return () => { active = false; };
   }, [retry]);
   if (error) return <div className="min-h-screen grid place-items-center p-5"><div className="max-w-md rounded-2xl bg-white p-6 text-center text-purple-900"><h2 className="text-xl font-bold">Your fridge data is safe</h2><p className="my-4">{error}</p><button className="rounded-xl bg-lime-200 px-5 py-3" onClick={() => { setError(''); setRetry(n => n + 1); }}>Retry connection</button></div></div>;
