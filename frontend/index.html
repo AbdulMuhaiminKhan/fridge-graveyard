@@ -1047,6 +1047,31 @@ body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
 .fg-extra-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .fg-extra-card{margin-bottom:0}.fg-extra-card>span{font-size:30px}.fg-extra-card h3{font:700 18px 'Fredoka',sans-serif;color:#4d3778;margin:6px 0 4px}.fg-extra-card p{font-size:13px;color:#7d6d8f;margin-bottom:12px}
 @media(max-width:650px){.fg-planner,.fg-household,.fg-extra-card{padding:16px}.fg-plan-day{grid-template-columns:1fr;gap:6px}.fg-plan-date{flex-direction:row;gap:8px;align-items:baseline}.fg-plan-cook{justify-self:start}.fg-household-forms,.fg-extra-cards{grid-template-columns:1fr}.fg-household-code strong{font-size:24px}}
+
+/* Receipt scanner */
+.fg-add-buttons{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.fg-scan-button{background:#f0e6fb!important;border-color:#e0cff5!important;box-shadow:0 4px 0 #d9c8ef!important;color:#654c8c!important}
+.fg-scan-button .fg-premium-badge{margin-left:4px;padding:1px 5px}
+.fg-extra-wide{grid-column:1 / -1}
+.fg-scan-pick{display:grid;gap:12px}
+.fg-scan-photo{display:grid;justify-items:center;gap:4px;padding:26px 16px;border:2px dashed #c9b5e3;border-radius:22px;background:#f6f0fd;color:#4d3778;text-align:center}
+.fg-scan-photo>span{font-size:40px}.fg-scan-photo strong{font:700 17px 'Fredoka',sans-serif}.fg-scan-photo small{font-size:12px;color:#7d6d8f;font-family:'Nunito Sans',sans-serif;font-weight:500}
+.fg-scan-note{font-size:12px;color:#7d6d8f}
+.fg-scan-error{padding:9px 12px;border-radius:12px;background:#ffe2ec;color:#8a3e5a;font-size:13px}
+.fg-scan-links{display:flex;flex-wrap:wrap;gap:8px}.fg-scan-links button{padding:7px 11px;border-radius:12px;background:#fff;border:1.5px solid #e3d7f4;color:#654c8c;font:600 12px 'Fredoka',sans-serif}
+.fg-scan-paste{display:grid;gap:8px}.fg-scan-paste label{font-size:12px;font-weight:700;color:#6d6081}.fg-scan-paste textarea{display:block;width:100%;margin-top:4px;padding:9px;font:12px 'IBM Plex Mono',monospace}
+.fg-scan-reading{text-align:center;padding:18px 4px;display:grid;gap:10px}.fg-scan-emoji{font-size:38px}
+.fg-scan-bar{height:10px;border-radius:99px;background:#efe6fb;overflow:hidden}.fg-scan-bar span{display:block;height:100%;background:#cfe44c;border-radius:99px;transition:width .3s}
+.fg-scan-summary{font-size:13px;color:#6d6081;margin-bottom:10px}
+.fg-scan-rows{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+.fg-scan-row{display:flex;gap:10px;padding:10px;border-radius:16px;background:#f6f0fd;border:1.5px solid #ebe1f8}.fg-scan-row.is-off{opacity:.55}
+.fg-scan-check{padding-top:8px}.fg-scan-check input{width:18px;height:18px}
+.fg-scan-fields{flex:1;min-width:0;display:grid;gap:6px}
+.fg-scan-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.fg-scan-top input{flex:1;min-width:120px;padding:7px 9px;font-weight:700}
+.fg-scan-tag{font:700 10px 'Fredoka',sans-serif;padding:2px 7px;border-radius:99px;background:#fff3c8;color:#7a5f1c;border:1px solid #efdc9a}
+.fg-scan-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1.4fr);gap:6px}.fg-scan-grid input,.fg-scan-grid select{width:100%;padding:6px 7px;font-size:12px}
+.fg-scan-line{font:10px 'IBM Plex Mono',monospace;color:#9488a2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:650px){.fg-scan-grid{grid-template-columns:1fr 1fr}.fg-add-buttons{justify-content:flex-start}.fg-evidence-heading{flex-wrap:wrap}}
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -1859,7 +1884,7 @@ const FILTERS = [
 ];
 
 
-function Dashboard({ items, onOpen, onAdd, goRecipes }) {
+function Dashboard({ items, onOpen, onAdd, onScan, goRecipes }) {
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
   const [tipIndex, setTipIndex] = useState(0);
@@ -1889,7 +1914,7 @@ function Dashboard({ items, onOpen, onAdd, goRecipes }) {
       </section>
       <div className="fg-stats-grid"><div className="fg-stat fg-stat-purple"><span>🧺</span><strong>{counts.all}</strong><small>In your fridge</small></div><div className="fg-stat fg-stat-pink"><span>⏰</span><strong>{counts.critical + counts.warning}</strong><small>Need rescuing</small></div><div className="fg-stat fg-stat-green"><span>🌱</span><strong>{counts.fresh}</strong><small>Happy & fresh</small></div><div className="fg-stat fg-stat-yellow"><span>🍱</span><strong>{counts.leftover}</strong><small>Leftover buddies</small></div><div className="fg-stat fg-stat-deceased"><span>🪦</span><strong>{counts.expired}</strong><small>Deceased</small></div></div>
       <section className="fg-tip"><div className="fg-tip-character">💡</div><div><strong>Detective's tiny tip</strong><p>{tips[tipIndex]}</p></div><button type="button" aria-label="Next food rescue tip" onClick={() => setTipIndex(i => (i + 1) % tips.length)}>↻</button></section>
-      <section className="fg-evidence-section"><div className="fg-evidence-heading"><div><span className="fg-eyebrow">🗂️ THE EVIDENCE LOCKER</span><h3>Meet your food suspects <span>✦</span></h3><p>Tap a food buddy to investigate, cook, freeze or rescue it.</p></div><button type="button" onClick={onAdd} className="fg-inline-add">＋ Add food</button></div>
+      <section className="fg-evidence-section"><div className="fg-evidence-heading"><div><span className="fg-eyebrow">🗂️ THE EVIDENCE LOCKER</span><h3>Meet your food suspects <span>✦</span></h3><p>Tap a food buddy to investigate, cook, freeze or rescue it.</p></div><div className="fg-add-buttons"><button type="button" onClick={onScan} className="fg-inline-add fg-scan-button">📸 Scan receipt <span className="fg-premium-badge">⭐</span></button><button type="button" onClick={onAdd} className="fg-inline-add">＋ Add food</button></div></div>
       <div className="fg-filter-row" role="group" aria-label="Filter food">{FILTERS.map(f => <button type="button" key={f.id} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.id === 'fresh' ? '🌱 ' : f.id === 'critical' ? '🚨 ' : f.id === 'warning' ? '⏰ ' : f.id === 'expired' ? '👻 ' : f.id === 'leftover' ? '🍱 ' : '✨ '}{f.label} <span>{counts[f.id]}</span></button>)}</div>
       <label className="fg-search"><span aria-hidden="true">🔍</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a food buddy..."/><span className="sr-only">Search food</span></label>
       {visible.length ? <ul className="fg-food-grid">{visible.map(i => <EvidenceCard key={i.id} item={i} onOpen={onOpen}/>)}</ul> : <div className="fg-empty-food"><div>🥺</div><strong>{items.length === 0 ? "The fridge is a blank case file!" : "No food buddies match this search!"}</strong><p>{items.length === 0 ? "Your evidence locker is empty. Add your first ingredient to start saving food." : "Try another filter or search term to find your food buddies."}</p><button type="button" onClick={onAdd}>＋ Add food</button></div>}</section>
@@ -2867,13 +2892,20 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
   );
 }
 
-function Premium({ items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
+function Premium({ onScan, items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
   return (
     <>
-      <SectionTitle kicker="⭐ Premium · unlocked for everyone" title="Fridge Graveyard Premium">Meal planning, household sharing and personal recipes. All premium features are included for free, with no payments.</SectionTitle>
+      <SectionTitle kicker="⭐ Premium · unlocked for everyone" title="Fridge Graveyard Premium">Receipt scanning, meal planning, household sharing and personal recipes. All premium features are included for free, with no payments.</SectionTitle>
       <MealPlanner items={items} goals={goals} shopping={shopping} onCook={onCook} onAddShopping={onAddShopping} toast={toast} />
       <HouseholdPanel memberName={memberName} onSaveName={onSaveName} toast={toast} askConfirm={askConfirm} logLength={logLength} />
       <div className="fg-extra-cards">
+        <section className="fg-extra-card fg-extra-wide">
+          <span aria-hidden="true">🧾</span>
+          <span className="fg-premium-badge">⭐ Premium</span>
+          <h3>Receipt scanner</h3>
+          <p>Snap your grocery receipt and the items go straight into your fridge with expiry dates. It works offline-first and for free: the photo is read on your phone and never uploaded.</p>
+          <button type="button" onClick={onScan}>📸 Scan a receipt →</button>
+        </section>
         <section className="fg-extra-card">
           <span aria-hidden="true">🧑‍🍳</span>
           <span className="fg-premium-badge">⭐ Premium</span>
@@ -2890,6 +2922,181 @@ function Premium({ items, goals, shopping, onCook, onAddShopping, toast, goRecip
         </section>
       </div>
     </>
+  );
+}
+
+/* =========================================================================
+   RECEIPT SCANNER (Premium, free): photo -> text in the browser -> items via the Python backend
+   The photo never leaves the device. Tesseract.js (free, open source) reads it locally and
+   only the recognised text is sent to /api/receipts/parse.
+   ========================================================================= */
+const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+let tesseractLoading = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (!tesseractLoading) tesseractLoading = new Promise((resolve, reject) => {
+    const tag = document.createElement('script');
+    tag.src = TESSERACT_URL; tag.async = true;
+    tag.onload = () => resolve(window.Tesseract);
+    tag.onerror = () => { tesseractLoading = null; reject(new Error('Could not load the text reader. Check the internet connection and try again.')); };
+    document.head.appendChild(tag);
+  });
+  return tesseractLoading;
+}
+
+// Shrink big phone photos and boost contrast: faster and more accurate recognition.
+async function prepareReceiptImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image(); i.onload = () => res(i);
+      i.onerror = () => rej(new Error('That file is not an image we can read. Try a JPG or PNG photo.'));
+      i.src = url;
+    });
+    const scale = Math.min(1, 2000 / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.filter = 'grayscale(1) contrast(1.4)';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas;
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function readReceiptPhoto(file, onProgress) {
+  const T = await loadTesseract();
+  const canvas = await prepareReceiptImage(file);
+  const worker = await T.createWorker('deu+eng', 1, {
+    logger: (m) => { if (m.status === 'recognizing text') onProgress(0.25 + m.progress * 0.75); else onProgress(0.1); },
+  });
+  try { return (await worker.recognize(canvas)).data.text; }
+  finally { await worker.terminate(); }
+}
+
+async function parseReceiptText(text) {
+  const res = await fetch('/api/receipts/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: String(text).slice(0, 20000) }) });
+  if (res.status === 400) throw new Error('No text was found. Try a sharper, flatter photo in good light.');
+  if (!res.ok) throw new Error('The receipt could not be read. Please try again.');
+  return res.json();
+}
+
+function sampleReceipt() {
+  const d = new Date();
+  const stamp = `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+  return ['REWE Markt GmbH', 'Musterstrasse 12, 10115 Berlin', 'EUR',
+    'BIO VOLLMILCH 3,5% 1L          1,19 B', 'BANANEN                        1,53 B', '  0,512 kg x 2,99 EUR/kg',
+    'HAEHNCHENBRUSTFILET 400G       5,49 B', 'BABYSPINAT 125G                1,79 B', 'TOMATEN STRAUCH                2,29 B',
+    'JOGHURT GRIECH. ART 500G       1,49 B', 'TK ERBSEN 750G                 1,99 B', 'PFAND 0,25                     0,25 A',
+    'TRAGETASCHE                    0,20 A', 'SUMME                     EUR 16,22', `${stamp}  18:42`].join('\n');
+}
+
+function ReceiptScanModal({ open, onClose, onAdd }) {
+  const [step, setStep] = useState('pick');   // pick | reading | review
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState('');
+  const [rows, setRows] = useState([]);
+  const [purchase, setPurchase] = useState(todayISO());
+  const [skipped, setSkipped] = useState(0);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const fileRef = useRef(null);
+
+  useEffect(() => { if (open) { setStep('pick'); setError(''); setRows([]); setProgress(0); setPasteOpen(false); setPasted(''); } }, [open]);
+  if (!open) return null;
+
+  const showResult = (result) => {
+    setPurchase(result.purchase_date);
+    setSkipped(result.skipped.length);
+    setRows(result.items.map((it, i) => ({ key: i, checked: it.suggested, name: it.name, category: it.category,
+      quantity: it.quantity, unit: UNITS.includes(it.unit) ? it.unit : 'pcs', expiryDate: it.expiry_date,
+      frozen: it.frozen, confidence: it.confidence, line: it.line })));
+    setStep('review');
+  };
+  const fromText = async (text) => {
+    setError(''); setStep('reading'); setProgress(0.9);
+    try { showResult(await parseReceiptText(text)); } catch (e) { setError(e.message); setStep('pick'); }
+  };
+  const fromPhoto = async (file) => {
+    if (!file) return;
+    setError(''); setStep('reading'); setProgress(0.02);
+    try {
+      const text = await readReceiptPhoto(file, setProgress);
+      showResult(await parseReceiptText(text));
+    } catch (e) { setError(e.message || 'The photo could not be read.'); setStep('pick'); }
+    finally { if (fileRef.current) fileRef.current.value = ''; }
+  };
+  const update = (key, patch) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const chosen = rows.filter((r) => r.checked && r.name.trim() && r.expiryDate);
+  const add = () => onAdd(chosen.map((r) => ({ name: r.name.trim(), category: r.category, quantity: Number(r.quantity) || 1,
+    unit: r.unit, addedDate: purchase, expiryDate: r.expiryDate, notes: 'Added from a receipt.', isLeftover: false, frozen: !!r.frozen })));
+
+  return (
+    <Modal open onClose={onClose} kicker="⭐ Premium · receipt scanner" title={step === 'review' ? 'Check your items' : 'Scan a grocery receipt'}
+      footer={step === 'review' ? <div className="flex flex-wrap justify-end gap-2">
+        <Btn variant="ghost" onClick={() => setStep('pick')}>Scan another</Btn>
+        <Btn variant="primary" onClick={add} disabled={chosen.length === 0}>Add {plural(chosen.length, 'item')}</Btn>
+      </div> : null}>
+      {step === 'pick' && (
+        <div className="fg-scan-pick">
+          <button type="button" className="fg-scan-photo" onClick={() => fileRef.current?.click()}>
+            <span aria-hidden="true">📸</span><strong>Take or choose a photo</strong><small>Lay the receipt flat, fill the frame, good light.</small>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" aria-label="Receipt photo"
+            onChange={(e) => fromPhoto(e.target.files && e.target.files[0])} />
+          {error && <p role="alert" className="fg-scan-error">{error}</p>}
+          <p className="fg-scan-note">🔒 The photo is read on this device and never uploaded. Only the text is sent to the app's server to find the food.</p>
+          <div className="fg-scan-links">
+            <button type="button" onClick={() => setPasteOpen((v) => !v)}>⌨️ Paste receipt text instead</button>
+            <button type="button" onClick={() => fromText(sampleReceipt())}>🧾 Try a sample receipt</button>
+          </div>
+          {pasteOpen && <div className="fg-scan-paste">
+            <label>Receipt text<textarea rows={6} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder={'VOLLMILCH 1L  1,19\nBANANEN  1,53'} /></label>
+            <Btn variant="primary" onClick={() => fromText(pasted)} disabled={!pasted.trim()}>Read text</Btn>
+          </div>}
+        </div>
+      )}
+      {step === 'reading' && (
+        <div className="fg-scan-reading" role="status" aria-live="polite">
+          <p className="fg-scan-emoji" aria-hidden="true">🧾🔍</p>
+          <p><strong>Reading your receipt…</strong></p>
+          <div className="fg-scan-bar"><span style={{ width: Math.round(progress * 100) + '%' }} /></div>
+          <p className="fg-scan-note">The first scan downloads the free text reader (about 15 MB), so it takes a little longer.</p>
+        </div>
+      )}
+      {step === 'review' && (
+        <div className="fg-scan-review">
+          <p className="fg-scan-summary">Bought on <strong>{fmtDate(purchase)}</strong>. Found {plural(rows.length, 'item')}{skipped ? `, skipped ${plural(skipped, 'line')} like deposits, bags and discounts` : ''}. Expiry dates are typical estimates, so check the pack.</p>
+          {rows.length === 0 ? <p className="fg-scan-error">No food found on this receipt. Try a sharper photo, or paste the text.</p> : (
+            <ul className="fg-scan-rows">
+              {rows.map((r) => (
+                <li key={r.key} className={`fg-scan-row ${r.checked ? '' : 'is-off'}`}>
+                  <label className="fg-scan-check"><input type="checkbox" checked={r.checked} onChange={(e) => update(r.key, { checked: e.target.checked })} aria-label={`Add ${r.name}`} /></label>
+                  <div className="fg-scan-fields">
+                    <div className="fg-scan-top">
+                      <input value={r.name} onChange={(e) => update(r.key, { name: e.target.value })} aria-label="Name" />
+                      {r.confidence === 'low' && <span className="fg-scan-tag">Check this</span>}
+                      {r.frozen && <span className="fg-frozen-badge">🧊 Frozen</span>}
+                    </div>
+                    <div className="fg-scan-grid">
+                      <select value={r.category} onChange={(e) => update(r.key, { category: e.target.value })} aria-label="Category">
+                        {Object.keys(CATEGORIES).map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <input type="number" min="0" step="any" value={r.quantity} onChange={(e) => update(r.key, { quantity: e.target.value })} aria-label="Quantity" />
+                      <select value={r.unit} onChange={(e) => update(r.key, { unit: e.target.value })} aria-label="Unit">
+                        {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                      <input type="date" value={r.expiryDate} onChange={(e) => update(r.key, { expiryDate: e.target.value })} aria-label="Expiry date" />
+                    </div>
+                    <p className="fg-scan-line">Receipt: {r.line}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -2914,6 +3121,7 @@ function App({ initialState, initialVersion, initialFresh }) {
   const [detailId, setDetailId] = useState(null);
   const [form, setForm] = useState({ open: false, initial: null });
   const [cooking, setCooking] = useState(null);
+  const [scanOpen, setScanOpen] = useState(false);
   const [rescueCelebration, setRescueCelebration] = useState(null);
   const rescueTimer = useRef(null);
   const [confirm, setConfirm] = useState(null);
@@ -2995,6 +3203,11 @@ function App({ initialState, initialVersion, initialFresh }) {
   const goTab = (t) => { setTab(t); window.scrollTo({ top: 0 }); };
 
   /* ----- item actions ----- */
+  const addScannedItems = (list) => {
+    setState((s) => ({ ...s, nextId: s.nextId + list.length, items: [...s.items, ...list.map((it, i) => ({ ...it, id: s.nextId + i }))] }));
+    setScanOpen(false);
+    toast(`${plural(list.length, 'item')} from your receipt logged as evidence.`);
+  };
   const saveItem = (data) => {
     setState((s) => {
       if (data.id) return { ...s, items: s.items.map((i) => (i.id === data.id ? { ...i, ...data } : i)) };
@@ -3113,7 +3326,7 @@ function App({ initialState, initialVersion, initialFresh }) {
       </header>
 
       <main className="fg-main mx-auto max-w-5xl px-4 pt-5">
-        {tab === 'scene' && <Dashboard items={items} onOpen={setDetailId} onAdd={() => setForm({ open: true, initial: null })} goRecipes={() => { setFocusId(null); goTab('recipes'); }} />}
+        {tab === 'scene' && <Dashboard items={items} onOpen={setDetailId} onScan={() => setScanOpen(true)} onAdd={() => setForm({ open: true, initial: null })} goRecipes={() => { setFocusId(null); goTab('recipes'); }} />}
         {tab === 'recipes' && <Recipes items={items} shopping={shopping} focusItem={focusItem} clearFocus={() => setFocusId(null)} onCook={setCooking} onAddMissing={addMissing} goScene={() => goTab('scene')} goals={goals} onGoalsChange={g=>setState(v=>({...v,goals:g}))} onAddShopping={addShopping} />}
         {tab === 'list' && <ShoppingList shopping={shopping} toast={toast} onAdd={(e) => { addShopping(e); toast(`${e[0].name} added.`); }}
           onToggle={(id) => setState((s) => ({ ...s, shopping: s.shopping.map((x) => x.id === id ? { ...x, checked: !x.checked } : x) }))}
@@ -3122,7 +3335,7 @@ function App({ initialState, initialVersion, initialFresh }) {
           onClearAll={() => setConfirm({ title: 'Clear the whole list?', body: 'Every item on the shopping list will be removed.', danger: true, confirmLabel: 'Clear all',
             onConfirm: () => { setState((s) => ({ ...s, shopping: [] })); toast('Shopping list cleared.'); } })} />}
         {tab === 'stats' && <Stats state={state} onReset={resetData} />}
-        {tab === 'premium' && <Premium items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
+        {tab === 'premium' && <Premium onScan={() => setScanOpen(true)} items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
           goRecipes={() => { setFocusId(null); goTab('recipes'); }} memberName={memberName} onSaveName={saveMemberName} askConfirm={setConfirm} logLength={state.log.length} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
@@ -3169,6 +3382,7 @@ function App({ initialState, initialVersion, initialFresh }) {
       <ItemFormModal open={form.open} initial={form.initial} onClose={() => setForm({ open: false, initial: null })} onSave={saveItem} />
       <CookModal recipe={cooking} onClose={() => setCooking(null)} onConfirm={cookConfirm} onAddMissing={(r) => addMissing(r)} />
       <ConfirmModal confirm={confirm} onClose={() => setConfirm(null)} />
+      <ReceiptScanModal open={scanOpen} onClose={() => setScanOpen(false)} onAdd={addScannedItems} />
       
       {/* Happy rescue celebration */}
 {rescueCelebration && (

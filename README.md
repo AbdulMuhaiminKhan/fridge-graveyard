@@ -41,6 +41,9 @@ Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
 - **Recipes:** 32 rescue recipes ranked by how much at-risk food they use, with estimated nutrition.
 - **Food goals:** eating style, allergies, favourite and disliked ingredients, protein and fibre goals.
 - **Premium (unlocked for free, no payments):**
+  - Receipt scanner: snap a grocery receipt and add the food with estimated expiry dates. The photo is
+    read on the device with Tesseract.js (free, open source) and never uploaded; the Python backend
+    (`backend/receipts.py`) turns the text into items using a German/English food dictionary.
   - Weekly meal planner that plans 7 dinners around expiry dates and builds one shopping list.
   - Household syncing: share one fridge with flatmates using a 6-character household code.
   - Who-ate-what: every eaten or wasted item records who closed it, with a household scoreboard.
@@ -71,6 +74,7 @@ All state endpoints need the household code in an `X-Household` header.
 | GET    | `/api/shopping`            | List the shopping list                                    |
 | GET    | `/api/stats`               | Rescued / wasted stats                                    |
 | GET    | `/api/stats/members`       | Who-ate-what scoreboard per household member              |
+| POST   | `/api/receipts/parse`      | Turn receipt text into food items (no household needed)   |
 
 ## Tests
 

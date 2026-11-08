@@ -177,3 +177,16 @@ def test_frontend_is_served(client):
     res = client.get("/")
     assert res.status_code == 200
     assert "Fridge Graveyard" in res.text
+
+
+def test_receipt_parse_endpoint(client):
+    res = client.post("/api/receipts/parse", json={"text": "BABYSPINAT 125G 1,79 B\nPFAND 0,25\nSUMME 2,04"})
+    assert res.status_code == 200
+    body = res.json()
+    assert [i["name"] for i in body["items"]] == ["Baby spinach"]
+    assert body["items"][0]["suggested"] is True
+
+
+def test_receipt_parse_rejects_empty_and_huge_text(client):
+    assert client.post("/api/receipts/parse", json={"text": "   "}).status_code == 400
+    assert client.post("/api/receipts/parse", json={"text": "x" * 20_001}).status_code == 422

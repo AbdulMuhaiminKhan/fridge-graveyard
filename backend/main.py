@@ -26,6 +26,9 @@ from typing import Any, Dict, Iterator, Optional
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel, Field
+
+from backend.receipts import parse_receipt
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND = BASE_DIR / "frontend" / "index.html"
@@ -286,3 +289,19 @@ def member_stats(x_household: Optional[str] = Header(default=None)):
         elif entry.get("outcome") == "wasted":
             row["wasted"] += 1
     return sorted(board.values(), key=lambda r: (-r["rescued"], r["wasted"], r["name"]))
+
+
+class ReceiptText(BaseModel):
+    text: str = Field(..., max_length=20_000, description="Raw text read from the receipt photo")
+
+
+@app.post("/api/receipts/parse")
+def parse_receipt_text(body: ReceiptText):
+    """Receipt scanner (Premium): turn text recognised from a receipt photo into fridge items.
+
+    The photo itself never reaches the server; the browser reads it with Tesseract.js and
+    only the text is sent here. Nothing is saved: the user reviews the items first.
+    """
+    if not body.text.strip():
+        raise HTTPException(status_code=400, detail="No text was found on the receipt")
+    return parse_receipt(body.text)
