@@ -40,7 +40,7 @@ Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
 - **Fridge:** track items by expiry, with a daily rescue mission and suggested actions.
 - **Recipes:** 32 rescue recipes ranked by how much at-risk food they use, with estimated nutrition.
 - **Food goals:** eating style, allergies, favourite and disliked ingredients, protein and fibre goals.
-- **Premium (unlocked for free, no payments):**
+- **Premium (shown as a 7-day free trial, then €5 a month; demo price only, no real payments):**
   - Receipt scanner: snap a grocery receipt and add the food with estimated expiry dates. The photo is
     read on the device with Tesseract.js (free, open source) and never uploaded; the Python backend
     (`backend/receipts.py`) turns the text into items using a German/English food dictionary.

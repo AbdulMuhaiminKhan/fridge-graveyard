@@ -2895,7 +2895,7 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
 function Premium({ onScan, items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
   return (
     <>
-      <SectionTitle kicker="⭐ Premium · unlocked for everyone" title="Fridge Graveyard Premium">Receipt scanning, meal planning, household sharing and personal recipes. All premium features are included for free, with no payments.</SectionTitle>
+      <SectionTitle kicker="⭐ Premium · 7-day free trial" title="Fridge Graveyard Premium">Receipt scanning, meal planning, household sharing and personal recipes. Premium features are free for 7 days, then €5 a month. (Demo price only: this is a prototype and no real payment is ever taken.)</SectionTitle>
       <MealPlanner items={items} goals={goals} shopping={shopping} onCook={onCook} onAddShopping={onAddShopping} toast={toast} />
       <HouseholdPanel memberName={memberName} onSaveName={onSaveName} toast={toast} askConfirm={askConfirm} logLength={logLength} />
       <div className="fg-extra-cards">
