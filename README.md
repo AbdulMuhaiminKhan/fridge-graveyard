@@ -49,32 +49,57 @@ Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
   - Who-ate-what: every eaten or wasted item records who closed it, with a household scoreboard.
 - **Shopping list** and **stats** (rescue rate, money saved).
 
-## Households
+## Accounts and households
 
-Every browser gets its own household on first visit, so visitors never see each other's fridge.
-The code is shown on the Premium tab. Entering a flatmate's code joins their fridge, and changes
-sync to the other phones within a few seconds. If two people save at the same moment, the later
-save is rejected (HTTP 409) and that phone reloads the latest version instead of overwriting it.
+Everyone logs in with a username and password. Passwords are stored as salted PBKDF2 hashes
+(`backend/auth.py`), never as plain text. Every account belongs to a household, and the
+household owns the fridge, shopping list, goals and stats.
 
-When upgrading from the old single-fridge version, the first browser that opens the app keeps
-the existing saved fridge.
+- **Create account** without a code: you get your own new fridge.
+- **Create account with a household code** (or join later on the Premium tab): you share that fridge.
+- Changes sync to everyone in the household every few seconds, with a notice like
+  "Minha updated the fridge". If two people save at the same moment, the later save is
+  rejected (HTTP 409) and that screen reloads the latest version instead of overwriting it.
+- **Leave household** gives you a fresh fridge of your own; the others keep the shared one.
+
+When upgrading from the old single-fridge version, the first account created keeps the
+existing saved fridge.
+
+### Two-user demo on one computer
+
+1. Start the app: `uvicorn backend.main:app --reload --port 8001` and open http://localhost:8001.
+2. **Window 1 (normal Chrome window):** Create account, name "Abdul", username `abdul`.
+   Open the **Premium** tab and copy the household code.
+3. **Window 2 (Chrome incognito window, Cmd+Shift+N):** Create account, name "Minha",
+   username `minha`, and paste the code into "Household code".
+   Within a few seconds window 1 shows "Minha joined your household" and both members.
+4. In window 2, mark an item as eaten. Window 1 shows "Minha updated the fridge" and the item disappears.
+5. On the Premium tab, "Who ate what" shows who rescued what.
+
+Tip: use a normal and an incognito window (or two different browsers), because two tabs of the
+same window share the same login if "Keep me logged in" is ticked.
 
 ## API
 
-All state endpoints need the household code in an `X-Household` header.
+All data endpoints need a login: `Authorization: Bearer <token>` from `/api/auth/login` or `/api/auth/register`.
 
-| Method | Path                       | What it does                                              |
-|--------|----------------------------|-----------------------------------------------------------|
-| POST   | `/api/households`          | Create a household and return its code                    |
-| GET    | `/api/households/{code}`   | Check a code before joining (item count, last update)     |
-| GET    | `/api/state`               | Load the household's state and its version                |
-| PUT    | `/api/state`               | Save the state (`X-Base-Version` guards against overwrites)|
-| DELETE | `/api/state`               | Wipe this household's state (app reloads demo data)       |
-| GET    | `/api/items`               | List fridge items                                         |
-| GET    | `/api/shopping`            | List the shopping list                                    |
-| GET    | `/api/stats`               | Rescued / wasted stats                                    |
-| GET    | `/api/stats/members`       | Who-ate-what scoreboard per household member              |
-| POST   | `/api/receipts/parse`      | Turn receipt text into food items (no household needed)   |
+| Method | Path                       | What it does                                                 |
+|--------|----------------------------|--------------------------------------------------------------|
+| POST   | `/api/auth/register`       | Create an account (optionally joining a household by code)   |
+| POST   | `/api/auth/login`          | Log in, returns a session token                              |
+| POST   | `/api/auth/logout`         | End the session                                              |
+| GET    | `/api/auth/me`             | Current user, household code and members                     |
+| GET    | `/api/households/{code}`   | Preview a household before joining (members, item count)     |
+| POST   | `/api/household/join`      | Join a household by code                                     |
+| POST   | `/api/household/leave`     | Leave and start a fresh household                            |
+| GET    | `/api/state`               | Load the household's state, version and who saved it last    |
+| PUT    | `/api/state`               | Save the state (`X-Base-Version` guards against overwrites)  |
+| DELETE | `/api/state`               | Wipe this household's state (app reloads demo data)          |
+| GET    | `/api/items`               | List fridge items                                            |
+| GET    | `/api/shopping`            | List the shopping list                                       |
+| GET    | `/api/stats`               | Rescued / wasted stats                                       |
+| GET    | `/api/stats/members`       | Who-ate-what scoreboard for every household member           |
+| POST   | `/api/receipts/parse`      | Turn receipt text into food items                            |
 
 ## Tests
 

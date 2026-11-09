@@ -2,15 +2,14 @@
 
 Serves the frontend at / and stores app state in a SQLite database.
 
-Data is stored per *household*. A household is identified by a short join code
-(for example "K7QM2P"). Every browser gets its own household on first visit, so
-visitors never see each other's fridge. Flatmates can share one fridge by
-entering the same code on their phones ("Household syncing").
+People sign in with a username and password (see backend/auth.py). Every account belongs to
+one *household*, and the household owns the fridge, shopping list, goals and stats. Flatmates
+share a fridge by joining the same household with its 6-character code (e.g. "K7QM2P");
+everyone in it sees the same data, and changes reach the other phones within seconds.
 
-The browser sends its code in the `X-Household` header on every state request.
-Saves carry the version they were based on (`X-Base-Version`), so if two people
-in the same household edit at once, the later save is rejected with 409 instead
-of silently overwriting the other person's change.
+Requests carry the session token in `Authorization: Bearer <token>`. Saves carry the version
+they were based on (`X-Base-Version`), so if two people edit at the same moment the later save
+is rejected with 409 instead of silently overwriting the other person's change.
 
 Run:  uvicorn backend.main:app --reload   (from the project root)
 """
@@ -24,10 +23,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+from backend import auth
 from backend.receipts import parse_receipt
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -124,9 +124,30 @@ def init_db() -> None:
                    updated_at TEXT NOT NULL
                )"""
         )
+        columns = {r["name"] for r in conn.execute("PRAGMA table_info(households)")}
+        if "updated_by" not in columns:
+            conn.execute("ALTER TABLE households ADD COLUMN updated_by TEXT")
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+                   id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   username TEXT NOT NULL UNIQUE,
+                   display_name TEXT NOT NULL,
+                   password_hash TEXT NOT NULL,
+                   household_code TEXT NOT NULL REFERENCES households(code),
+                   created_at TEXT NOT NULL
+               )"""
+        )
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS sessions (
+                   token TEXT PRIMARY KEY,
+                   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                   created_at TEXT NOT NULL,
+                   expires_at TEXT NOT NULL
+               )"""
+        )
         conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         # Older versions kept one shared state row. Keep the table so that data can be
-        # handed to the first household created after upgrading (see create_household).
+        # handed to the first household created after upgrading (see make_household).
         conn.execute(
             """CREATE TABLE IF NOT EXISTS app_state (
                    id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -153,10 +174,52 @@ def get_household(conn: sqlite3.Connection, code: str) -> sqlite3.Row:
     return row
 
 
-def load_state(code: str) -> Optional[Dict[str, Any]]:
+def make_household(conn: sqlite3.Connection) -> str:
+    """Create an empty household. The very first one after upgrading from the old
+    single-fridge version inherits that saved fridge, so nobody loses their data."""
+    now = now_iso()
+    code = new_code(conn)
+    data = None
+    claimed = conn.execute("SELECT value FROM meta WHERE key = 'legacy_claimed'").fetchone()
+    legacy = conn.execute("SELECT data FROM app_state WHERE id = 1").fetchone()
+    if legacy and not claimed:
+        data = legacy["data"]
+        conn.execute("INSERT INTO meta (key, value) VALUES ('legacy_claimed', ?)", (code,))
+    conn.execute(
+        "INSERT INTO households (code, data, version, created_at, updated_at) VALUES (?, ?, 0, ?, ?)",
+        (code, data, now, now),
+    )
+    return code
+
+
+def members_of(conn: sqlite3.Connection, code: str):
+    return conn.execute(
+        "SELECT id, username, display_name FROM users WHERE household_code = ? ORDER BY created_at, id",
+        (code,),
+    ).fetchall()
+
+
+def current_user(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any]:
+    """FastAPI dependency: the signed-in user, or 401."""
     with get_db() as conn:
-        row = get_household(conn, code)
-    return json.loads(row["data"]) if row["data"] else None
+        user = auth.user_for_token(conn, auth.bearer_token(authorization))
+    if user is None:
+        raise HTTPException(status_code=401, detail="Please log in")
+    return dict(user)
+
+
+def account_payload(conn: sqlite3.Connection, user: Dict[str, Any]) -> Dict[str, Any]:
+    code = user["household_code"]
+    return {
+        "user": {"username": user["username"], "display_name": user["display_name"]},
+        "household": {
+            "code": code,
+            "members": [
+                {"username": m["username"], "display_name": m["display_name"], "you": m["id"] == user["id"]}
+                for m in members_of(conn, code)
+            ],
+        },
+    }
 
 
 # --------------------------------------------------------------------------- routes
@@ -166,65 +229,132 @@ def index():
     return FileResponse(FRONTEND)
 
 
-@app.post("/api/households", status_code=201)
-def create_household():
-    """Create a new household and return its join code.
+class RegisterBody(BaseModel):
+    username: str = Field(..., max_length=40)
+    password: str = Field(..., max_length=200)
+    display_name: str = Field("", max_length=60)
+    household_code: Optional[str] = Field(None, max_length=12, description="Join an existing household")
 
-    The first household created after upgrading from the old single-fridge version
-    inherits that saved fridge, so nobody loses their existing data.
-    """
-    now = now_iso()
+
+class LoginBody(BaseModel):
+    username: str = Field(..., max_length=40)
+    password: str = Field(..., max_length=200)
+
+
+@app.post("/api/auth/register", status_code=201)
+def register(body: RegisterBody):
+    """Create an account. Without a code you get your own new household; with a code you
+    join that household straight away (e.g. a flatmate's fridge)."""
+    username = auth.clean_username(body.username)
+    auth.check_password(body.password)
+    display_name = auth.clean_display_name(body.display_name, username.capitalize())
     with get_db() as conn:
-        code = new_code(conn)
-        data = None
-        claimed = conn.execute("SELECT value FROM meta WHERE key = 'legacy_claimed'").fetchone()
-        legacy = conn.execute("SELECT data FROM app_state WHERE id = 1").fetchone()
-        if legacy and not claimed:
-            data = legacy["data"]
-            conn.execute("INSERT INTO meta (key, value) VALUES ('legacy_claimed', ?)", (code,))
-        conn.execute(
-            "INSERT INTO households (code, data, version, created_at, updated_at) VALUES (?, ?, 0, ?, ?)",
-            (code, data, now, now),
+        if conn.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone():
+            raise HTTPException(status_code=409, detail="That username is taken. Try another one.")
+        if body.household_code and body.household_code.strip():
+            code = normalize_code(body.household_code)
+            get_household(conn, code)
+        else:
+            code = make_household(conn)
+        cur = conn.execute(
+            "INSERT INTO users (username, display_name, password_hash, household_code, created_at) VALUES (?, ?, ?, ?, ?)",
+            (username, display_name, auth.hash_password(body.password), code, now_iso()),
         )
-    return {"code": code}
+        user = dict(conn.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone())
+        token = auth.create_session(conn, user["id"])
+        return {"token": token, **account_payload(conn, user)}
+
+
+@app.post("/api/auth/login")
+def login(body: LoginBody):
+    username = (body.username or "").strip().lower()
+    with get_db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        if row is None or not auth.verify_password(body.password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Wrong username or password.")
+        user = dict(row)
+        token = auth.create_session(conn, user["id"])
+        return {"token": token, **account_payload(conn, user)}
+
+
+@app.post("/api/auth/logout")
+def logout(authorization: Optional[str] = Header(default=None)):
+    token = auth.bearer_token(authorization)
+    if token:
+        with get_db() as conn:
+            conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+    return {"ok": True}
+
+
+@app.get("/api/auth/me")
+def me(user: Dict[str, Any] = Depends(current_user)):
+    with get_db() as conn:
+        return account_payload(conn, user)
+
+
+class JoinBody(BaseModel):
+    code: str = Field(..., max_length=12)
 
 
 @app.get("/api/households/{code}")
-def check_household(code: str):
-    """Used by "Join a household" to check a code before switching to it."""
+def preview_household(code: str, user: Dict[str, Any] = Depends(current_user)):
+    """Shown before joining: who is in that household and how full the fridge is."""
     code = normalize_code(code)
     with get_db() as conn:
         row = get_household(conn, code)
+        names = [m["display_name"] for m in members_of(conn, code)]
     state = json.loads(row["data"]) if row["data"] else None
-    return {
-        "code": code,
-        "items": len(state.get("items", [])) if state else 0,
-        "updated_at": row["updated_at"],
-    }
+    return {"code": code, "items": len(state.get("items", [])) if state else 0, "members": names}
+
+
+@app.post("/api/household/join")
+def join_household(body: JoinBody, user: Dict[str, Any] = Depends(current_user)):
+    code = normalize_code(body.code)
+    with get_db() as conn:
+        get_household(conn, code)
+        conn.execute("UPDATE users SET household_code = ? WHERE id = ?", (code, user["id"]))
+        user["household_code"] = code
+        return account_payload(conn, user)
+
+
+@app.post("/api/household/leave")
+def leave_household(user: Dict[str, Any] = Depends(current_user)):
+    """Start over with your own, new household (the shared one keeps its data)."""
+    with get_db() as conn:
+        code = make_household(conn)
+        conn.execute("UPDATE users SET household_code = ? WHERE id = ?", (code, user["id"]))
+        user["household_code"] = code
+        return account_payload(conn, user)
+
+
+def household_state(code: str) -> Optional[Dict[str, Any]]:
+    with get_db() as conn:
+        row = get_household(conn, code)
+    return json.loads(row["data"]) if row["data"] else None
 
 
 @app.get("/api/state")
-def get_state(x_household: Optional[str] = Header(default=None)):
-    """The household's whole app state (null if nothing saved yet) and its version."""
-    code = normalize_code(x_household)
+def get_state(user: Dict[str, Any] = Depends(current_user)):
+    """The household's whole app state (null if nothing saved yet), its version, and who saved last."""
     with get_db() as conn:
-        row = get_household(conn, code)
+        row = get_household(conn, user["household_code"])
     return {
         "state": json.loads(row["data"]) if row["data"] else None,
         "version": row["version"],
         "updated_at": row["updated_at"],
+        "updated_by": row["updated_by"],
     }
 
 
 @app.put("/api/state")
 def save_state(
     state: Dict[str, Any],
-    x_household: Optional[str] = Header(default=None),
+    user: Dict[str, Any] = Depends(current_user),
     x_base_version: Optional[int] = Header(default=None),
 ):
-    code = normalize_code(x_household)
     validate_state(state)
     now = now_iso()
+    code = user["household_code"]
     with get_db() as conn:
         row = get_household(conn, code)
         if x_base_version is not None and x_base_version != row["version"]:
@@ -235,50 +365,50 @@ def save_state(
             )
         version = row["version"] + 1
         conn.execute(
-            "UPDATE households SET data = ?, version = ?, updated_at = ? WHERE code = ?",
-            (json.dumps(state), version, now, code),
+            "UPDATE households SET data = ?, version = ?, updated_at = ?, updated_by = ? WHERE code = ?",
+            (json.dumps(state), version, now, user["display_name"], code),
         )
     return {"ok": True, "version": version, "updated_at": now}
 
 
 @app.delete("/api/state")
-def reset_state(x_household: Optional[str] = Header(default=None)):
+def reset_state(user: Dict[str, Any] = Depends(current_user)):
     """Wipe this household's data only (the app then reloads demo data)."""
-    code = normalize_code(x_household)
     now = now_iso()
     with get_db() as conn:
-        row = get_household(conn, code)
+        row = get_household(conn, user["household_code"])
         conn.execute(
-            "UPDATE households SET data = NULL, version = ?, updated_at = ? WHERE code = ?",
-            (row["version"] + 1, now, code),
+            "UPDATE households SET data = NULL, version = ?, updated_at = ?, updated_by = ? WHERE code = ?",
+            (row["version"] + 1, now, user["display_name"], user["household_code"]),
         )
     return {"ok": True}
 
 
 @app.get("/api/items")
-def list_items(x_household: Optional[str] = Header(default=None)):
+def list_items(user: Dict[str, Any] = Depends(current_user)):
     """Read-only view of the household's fridge items."""
-    state = load_state(normalize_code(x_household)) or {}
-    return state.get("items", [])
+    return (household_state(user["household_code"]) or {}).get("items", [])
 
 
 @app.get("/api/shopping")
-def list_shopping(x_household: Optional[str] = Header(default=None)):
-    state = load_state(normalize_code(x_household)) or {}
-    return state.get("shopping", [])
+def list_shopping(user: Dict[str, Any] = Depends(current_user)):
+    return (household_state(user["household_code"]) or {}).get("shopping", [])
 
 
 @app.get("/api/stats")
-def get_stats(x_household: Optional[str] = Header(default=None)):
-    state = load_state(normalize_code(x_household)) or {}
-    return state.get("stats", {})
+def get_stats(user: Dict[str, Any] = Depends(current_user)):
+    return (household_state(user["household_code"]) or {}).get("stats", {})
 
 
 @app.get("/api/stats/members")
-def member_stats(x_household: Optional[str] = Header(default=None)):
-    """Who-ate-what: rescued and wasted counts per household member, from the case log."""
-    state = load_state(normalize_code(x_household)) or {}
-    board: Dict[str, Dict[str, Any]] = {}
+def member_stats(user: Dict[str, Any] = Depends(current_user)):
+    """Who-ate-what: rescued and wasted counts per household member, from the case log.
+    Every current member is listed, even before they have closed a case."""
+    code = user["household_code"]
+    state = household_state(code) or {}
+    with get_db() as conn:
+        members = [m["display_name"] for m in members_of(conn, code)]
+    board: Dict[str, Dict[str, Any]] = {n: {"name": n, "rescued": 0, "wasted": 0} for n in members}
     for entry in state.get("log", []):
         if entry.get("demo"):
             continue

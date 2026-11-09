@@ -1072,6 +1072,33 @@ body .fg-modal-backdrop { background: rgba(31,21,36,.76) !important; }
 .fg-scan-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1.4fr);gap:6px}.fg-scan-grid input,.fg-scan-grid select{width:100%;padding:6px 7px;font-size:12px}
 .fg-scan-line{font:10px 'IBM Plex Mono',monospace;color:#9488a2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:650px){.fg-scan-grid{grid-template-columns:1fr 1fr}.fg-add-buttons{justify-content:flex-start}.fg-evidence-heading{flex-wrap:wrap}}
+
+/* Accounts: login screen, user chip, household members */
+.fg-auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.fg-auth-card{width:min(100%,420px);background:#fffdf7;border:2px solid #f2eafc;border-radius:30px;box-shadow:0 18px 40px rgba(77,49,121,.14);padding:0 26px 22px;overflow:hidden;color:#51436a}
+.fg-auth-tape{height:6px;margin:0 -26px 20px}
+.fg-auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}.fg-auth-brand>span{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#e5f16c;font-size:26px}
+.fg-auth-brand h1{font:800 22px/1.1 'Baloo 2',sans-serif;color:#56427b}.fg-auth-brand p{font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;color:#8a7b9e}
+.fg-auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:16px;background:#f3ebfc;margin-bottom:14px}
+.fg-auth-tabs button{padding:9px;border-radius:12px;font:600 13px 'Fredoka',sans-serif;color:#6d578e;background:transparent}
+.fg-auth-tabs button[aria-selected="true"]{background:#fffdf7;box-shadow:0 2px 6px rgba(77,49,121,.12);color:#4d3778}
+.fg-auth-form{display:grid;gap:11px}.fg-auth-form label{display:grid;gap:4px;font-size:12px;font-weight:700;color:#6d6081}.fg-auth-form label span{font-weight:500;color:#9488a2}
+.fg-auth-form input:not([type=checkbox]){padding:10px 12px;font-size:14px;font-weight:500}.fg-auth-form small{font-weight:500;color:#9488a2;font-size:11px}
+.fg-auth-remember{display:flex!important;grid-template-columns:none;align-items:center;gap:8px;font-weight:600!important}
+.fg-auth-submit{margin-top:4px;padding:12px;border-radius:16px;background:#e4f06b;border:2px solid #d5e35b;box-shadow:0 4px 0 #c4d34b;color:#4a4c36;font:600 15px 'Fredoka',sans-serif}
+.fg-auth-error{padding:9px 12px;border-radius:12px;background:#ffe2ec;color:#8a3e5a;font-size:13px}
+.fg-auth-notice{padding:9px 12px;border-radius:12px;background:#eaf4c9;color:#4e5b3c;font-size:13px;margin-bottom:10px}
+.fg-auth-small{margin-top:12px;font-size:12px;color:#867693;text-align:center}.fg-auth-small button{color:#654c8c;text-decoration:underline;font:inherit;background:none;padding:0;border-radius:0}
+.fg-user-chip{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 5px;border-radius:99px;background:#f3ebfc;border:1.5px solid #e6d8f6;min-width:0}
+.fg-avatar{display:inline-grid;place-items:center;width:28px;height:28px;flex-shrink:0;border-radius:50%;background:#d6bdf9;color:#4d3778;font:700 13px 'Fredoka',sans-serif}
+.fg-user-name{display:flex;flex-direction:column;line-height:1.1;font:700 13px 'Fredoka',sans-serif;color:#4d3778;min-width:0}.fg-user-name small{font:500 10px 'Nunito Sans',sans-serif;color:#8a7b9e;white-space:nowrap}
+.fg-user-chip button{width:28px;height:28px;border-radius:50%;background:#fffdf7;color:#654c8c;font-size:14px;border:1px solid #e6d8f6}
+.fg-members{margin:0 0 16px;padding:14px 16px;border-radius:20px;background:#f6f0fd}
+.fg-members ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.fg-members li{display:flex;align-items:center;gap:9px;padding:7px 10px;background:#fff;border-radius:12px;font:600 14px 'Fredoka',sans-serif;color:#4d3778}
+.fg-you{font:700 10px 'Fredoka',sans-serif;padding:1px 7px;border-radius:99px;background:#e6f16f;color:#505a31}.fg-username{margin-left:auto;font:400 11px 'IBM Plex Mono',monospace;color:#9488a2}
+.fg-leave{display:flex;align-items:flex-end}.fg-leave button{background:#fff!important;border-color:#f5c2d2!important;box-shadow:0 3px 0 #f4dbe5!important;color:#8a3e5a!important}
+@media(max-width:650px){.fg-user-name small,.fg-proto-badge{display:none}.fg-user-name{max-width:90px;overflow:hidden;text-overflow:ellipsis}}
 </style>
 </head>
 <body class="font-sans antialiased">
@@ -1555,63 +1582,100 @@ function makeEmpty() {
 
 const API = '/api/state';
 
-// Each browser belongs to a household (a 6-character join code). A new browser gets its own
-// household automatically, so visitors never share a fridge unless they join the same code.
-const HOUSEHOLD_KEY = 'fg-household-code';
-const MEMBER_KEY = 'fg-member-name';
-const readLocal = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
-const writeLocal = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { /* private mode */ } };
+// Accounts: people log in with a username and password. Each account belongs to a household
+// (6-character join code); everyone in the household shares one fridge.
+// The session token is kept in localStorage ("keep me logged in") or only for this tab.
+const SESSION_KEY = 'fg-session';
+const tryStore = (fn) => { try { return fn(); } catch (e) { return null; } };
+const readSession = () => tryStore(() => sessionStorage.getItem(SESSION_KEY)) || tryStore(() => localStorage.getItem(SESSION_KEY)) || '';
+const writeSession = (token, remember) => {
+  tryStore(() => sessionStorage.removeItem(SESSION_KEY)); tryStore(() => localStorage.removeItem(SESSION_KEY));
+  if (token) tryStore(() => (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, token));
+};
 const cleanCode = (c) => String(c || '').replace(/[\s-]/g, '').toUpperCase();
-let householdCode = cleanCode(readLocal(HOUSEHOLD_KEY));
+let sessionToken = readSession();
+let householdCode = '';
 
 class ConflictError extends Error {}
+class AuthError extends Error {}
 
-async function createHousehold() {
-  const res = await fetch('/api/households', { method: 'POST' });
-  if (!res.ok) throw new Error(`Could not create a household: HTTP ${res.status}`);
-  householdCode = (await res.json()).code;
-  writeLocal(HOUSEHOLD_KEY, householdCode);
-  return householdCode;
+async function api(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const res = await fetch(path, { cache: 'no-store', ...options, headers });
+  if (res.status === 401 && !path.startsWith('/api/auth/login')) { writeSession(''); sessionToken = ''; throw new AuthError('Please log in again.'); }
+  return res;
+}
+const errorText = async (res, fallback) => { try { return (await res.json()).detail || fallback; } catch (e) { return fallback; } };
+
+function rememberAccount(payload) { householdCode = payload.household.code; return payload; }
+
+async function signIn(mode, form) {
+  const body = mode === 'register'
+    ? { username: form.username, password: form.password, display_name: form.displayName, household_code: form.code || null }
+    : { username: form.username, password: form.password };
+  const res = await fetch(`/api/auth/${mode === 'register' ? 'register' : 'login'}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(await errorText(res, 'Something went wrong. Please try again.'));
+  const payload = await res.json();
+  sessionToken = payload.token;
+  writeSession(payload.token, form.remember);
+  return rememberAccount(payload);
+}
+
+async function signOut() {
+  await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  writeSession(''); sessionToken = ''; householdCode = '';
+}
+
+async function fetchAccount() {
+  const res = await api('/api/auth/me');
+  if (!res.ok) throw new Error(`Could not load your account: HTTP ${res.status}`);
+  return rememberAccount(await res.json());
 }
 
 async function fetchRemote() {
-  const res = await fetch(API, { cache: 'no-store', headers: { 'X-Household': householdCode } });
-  if (res.status === 404 || res.status === 400) return null; // unknown code (e.g. server was reset)
+  const res = await api(API);
   if (!res.ok) throw new Error(`Load failed: HTTP ${res.status}`);
   const payload = await res.json();
   if (!Object.prototype.hasOwnProperty.call(payload, 'state')) throw new Error('Invalid server response');
   return payload;
 }
 
-// Load this household's state. New households start with the demo fridge.
+// Load the signed-in user's account and their household's state. New households start with the demo fridge.
 async function loadState() {
-  if (!householdCode) await createHousehold();
-  let payload = await fetchRemote();
-  if (!payload) { await createHousehold(); payload = await fetchRemote(); }
-  if (!payload) throw new Error('Could not open a household on the server.');
-  if (payload.state === null) return { state: makeSeed(), version: payload.version, fresh: true };
+  if (!sessionToken) throw new AuthError('Please log in.');
+  const account = await fetchAccount();
+  const payload = await fetchRemote();
+  if (payload.state === null) return { account, state: makeSeed(), version: payload.version, fresh: true };
   if (payload.state.version !== STATE_VERSION || !Array.isArray(payload.state.items)) throw new Error('Unsupported saved data. Nothing was overwritten.');
-  return { state: payload.state, version: payload.version };
+  return { account, state: payload.state, version: payload.version };
 }
 
-// Save and return the new version. 409 means another device in the household saved first.
+// Save and return the new version. 409 means another member of the household saved first.
 async function saveState(state, baseVersion) {
-  const res = await fetch(API, { method: 'PUT', body: JSON.stringify(state), headers: {
-    'Content-Type': 'application/json', 'X-Household': householdCode, 'X-Base-Version': String(baseVersion) } });
+  const res = await api(API, { method: 'PUT', body: JSON.stringify(state), headers: { 'X-Base-Version': String(baseVersion) } });
   if (res.status === 409) throw new ConflictError('Household changed on another device');
   if (!res.ok) throw new Error(`Save failed: HTTP ${res.status}`);
   return (await res.json()).version;
 }
 
 async function checkHousehold(code) {
-  const res = await fetch('/api/households/' + encodeURIComponent(cleanCode(code)), { cache: 'no-store' });
+  const res = await api('/api/households/' + encodeURIComponent(cleanCode(code)));
   if (res.status === 404) throw new Error('No household found with that code. Check it and try again.');
-  if (!res.ok) throw new Error('Enter the 6-character code from the other phone.');
+  if (!res.ok) throw new Error('Enter the 6-character code from your flatmate.');
   return res.json();
 }
 
+async function changeHousehold(action, code) {
+  const res = await api(`/api/household/${action}`, { method: 'POST', body: action === 'join' ? JSON.stringify({ code: cleanCode(code) }) : undefined });
+  if (!res.ok) throw new Error(await errorText(res, 'Could not change household.'));
+  return rememberAccount(await res.json());
+}
+
 async function fetchMemberStats() {
-  const res = await fetch('/api/stats/members', { cache: 'no-store', headers: { 'X-Household': householdCode } });
+  const res = await api('/api/stats/members');
   return res.ok ? res.json() : [];
 }
 
@@ -2825,59 +2889,75 @@ function MealPlanner({ items, goals, shopping, onCook, onAddShopping, toast }) {
   );
 }
 
-function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }) {
-  const [name, setName] = useState(memberName);
+function HouseholdPanel({ account, onAccountChange, toast, askConfirm, logLength }) {
   const [code, setCode] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [board, setBoard] = useState(null);
-  // Who-ate-what scoreboard from the backend (refreshes after cases are closed).
+  const members = account.household.members;
+  const myCode = account.household.code;
+
+  // Who-ate-what scoreboard (refreshes after cases are closed or someone joins).
   useEffect(() => {
     const t = setTimeout(() => fetchMemberStats().then(setBoard).catch(() => setBoard([])), 800);
     return () => clearTimeout(t);
-  }, [logLength]);
+  }, [logLength, members.length]);
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(householdCode); toast('Household code copied. Send it to your flatmates.'); }
-    catch (e) { toast(`Your household code is ${householdCode}`); }
+    try { await navigator.clipboard.writeText(myCode); toast('Household code copied. Send it to your flatmates.'); }
+    catch (e) { toast(`Your household code is ${myCode}`); }
   };
-  const saveName = (e) => { e.preventDefault(); onSaveName(name); toast(name.trim() ? `Nice to meet you, ${name.trim()}.` : 'Name cleared.'); };
+  const switchTo = async (action, c) => {
+    setBusy(true);
+    try { await changeHousehold(action, c); window.location.reload(); }
+    catch (e) { setErr(e.message); setBusy(false); }
+  };
   const join = async (e) => {
     e.preventDefault();
     const c = cleanCode(code);
     if (!/^[A-Z0-9]{6}$/.test(c)) return setErr('Codes are 6 letters and numbers, like K7QM2P.');
-    if (c === householdCode) return setErr('That is already your household.');
+    if (c === myCode) return setErr('That is already your household.');
     setBusy(true); setErr('');
     try {
       const info = await checkHousehold(c);
       askConfirm({
         title: `Join household ${info.code}?`,
-        body: `You will switch to that shared fridge (${plural(info.items, 'item')}). Your current fridge stays saved under code ${householdCode}, so note it down if you want to come back.`,
+        body: `You will share ${info.members.length ? info.members.join(', ') + "'s" : 'that'} fridge (${plural(info.items, 'item')}). Your current fridge stays in household ${myCode}, so anyone still in it keeps it.`,
         confirmLabel: 'Join household',
-        onConfirm: () => { writeLocal(HOUSEHOLD_KEY, info.code); window.location.reload(); },
+        onConfirm: () => switchTo('join', info.code),
       });
     } catch (e2) { setErr(e2.message); } finally { setBusy(false); }
   };
+  const leave = () => askConfirm({
+    title: 'Leave this household?',
+    body: members.length > 1 ? 'You get a fresh fridge of your own. Everyone else keeps this shared fridge.' : 'You are the only member. You will start a new, empty fridge and this one stays saved under its code.',
+    confirmLabel: 'Leave household', danger: true,
+    onConfirm: () => switchTo('leave'),
+  });
 
   return (
     <section className="fg-household" aria-labelledby="household-h">
       <span className="fg-eyebrow">🏠 HOUSEHOLD SYNCING <span className="fg-premium-badge">⭐ Premium</span></span>
       <h3 id="household-h">Share one fridge</h3>
-      <p>Everyone who uses this code sees the same fridge, shopping list and stats. Changes appear on the other phones within a few seconds.</p>
+      <p>Everyone in your household sees the same fridge, shopping list and stats. Changes show up on the other phones within a few seconds.</p>
       <div className="fg-household-code">
         <span>Your household code</span>
-        <strong aria-label={`Household code ${householdCode.split('').join(' ')}`}>{householdCode}</strong>
+        <strong aria-label={`Household code ${myCode.split('').join(' ')}`}>{myCode}</strong>
         <button type="button" onClick={copy}>📋 Copy</button>
       </div>
+      <div className="fg-members">
+        <p className="fg-scoreboard-title">👥 Members ({members.length})</p>
+        <ul>{members.map((m) => (
+          <li key={m.username}><span className="fg-avatar" aria-hidden="true">{m.display_name.slice(0, 1).toUpperCase()}</span>{m.display_name}{m.you && <span className="fg-you">you</span>}<span className="fg-username">@{m.username}</span></li>
+        ))}</ul>
+        {members.length === 1 && <p className="fg-scoreboard-empty">Invite a flatmate: they create an account and enter this code, or join from their Premium page.</p>}
+      </div>
       <div className="fg-household-forms">
-        <form onSubmit={saveName}>
-          <label>Your name (for who-ate-what)<input value={name} maxLength={40} onChange={(e) => setName(e.target.value)} placeholder="e.g. Abdul" /></label>
-          <button type="submit">Save name</button>
-        </form>
         <form onSubmit={join} noValidate>
           <label>Join another household<input value={code} maxLength={8} onChange={(e) => { setCode(e.target.value); setErr(''); }} placeholder="Code from a flatmate" autoCapitalize="characters" /></label>
           <button type="submit" disabled={busy}>{busy ? 'Checking…' : 'Join'}</button>
         </form>
+        <div className="fg-leave"><button type="button" onClick={leave} disabled={busy}>🚪 Leave household</button></div>
       </div>
       {err && <p role="alert" className="fg-household-error">{err}</p>}
       <div className="fg-scoreboard">
@@ -2892,12 +2972,12 @@ function HouseholdPanel({ memberName, onSaveName, toast, askConfirm, logLength }
   );
 }
 
-function Premium({ onScan, items, goals, shopping, onCook, onAddShopping, toast, goRecipes, memberName, onSaveName, askConfirm, logLength }) {
+function Premium({ onScan, items, goals, shopping, onCook, onAddShopping, toast, goRecipes, account, onAccountChange, askConfirm, logLength }) {
   return (
     <>
       <SectionTitle kicker="⭐ Premium · 7-day free trial" title="Fridge Graveyard Premium">Receipt scanning, meal planning, household sharing and personal recipes. Premium features are free for 7 days, then €5 a month. (Demo price only: this is a prototype and no real payment is ever taken.)</SectionTitle>
       <MealPlanner items={items} goals={goals} shopping={shopping} onCook={onCook} onAddShopping={onAddShopping} toast={toast} />
-      <HouseholdPanel memberName={memberName} onSaveName={onSaveName} toast={toast} askConfirm={askConfirm} logLength={logLength} />
+      <HouseholdPanel account={account} onAccountChange={onAccountChange} toast={toast} askConfirm={askConfirm} logLength={logLength} />
       <div className="fg-extra-cards">
         <section className="fg-extra-card fg-extra-wide">
           <span aria-hidden="true">🧾</span>
@@ -3112,9 +3192,10 @@ const TABS = [
   { id: 'premium', label: 'Premium', icon: '⭐' },
 ];
 
-function App({ initialState, initialVersion, initialFresh }) {
+function App({ initialState, initialVersion, initialFresh, initialAccount, onLogout }) {
   const [state, setState] = useState(initialState);
-  const [memberName, setMemberName] = useState(() => readLocal(MEMBER_KEY));
+  const [account, setAccount] = useState(initialAccount);
+  const memberName = account.user.display_name;
   const memberRef = useRef(memberName);
   memberRef.current = memberName;
   const [tab, setTab] = useState('scene');
@@ -3174,15 +3255,23 @@ function App({ initialState, initialVersion, initialFresh }) {
       if (document.visibilityState !== 'visible' || savedSeq.current < changeSeq.current) return;
       const payload = await fetchRemote().catch(() => null);
       if (payload && payload.version > versionRef.current && savedSeq.current >= changeSeq.current) {
-        applyRemote(payload, 'Fridge updated from your household.');
+        applyRemote(payload, payload.updated_by && payload.updated_by !== memberRef.current
+          ? `🔄 ${payload.updated_by} updated the fridge.` : 'Fridge updated from your other device.');
       }
+      // Keep the member list fresh, e.g. when a flatmate joins during a demo.
+      fetchAccount().then((a) => setAccount((old) => {
+        if (old.household.members.length < a.household.members.length) {
+          const fresh = a.household.members.filter((m) => !old.household.members.some((o) => o.username === m.username));
+          if (fresh.length) toast(`👋 ${fresh.map((m) => m.display_name).join(' and ')} joined your household.`);
+        }
+        return JSON.stringify(old) === JSON.stringify(a) ? old : a;
+      })).catch(() => {});
     };
-    const timer = setInterval(pull, 8000);
+    const timer = setInterval(pull, 4000);
     document.addEventListener('visibilitychange', pull);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', pull); };
   }, []);
 
-  const saveMemberName = (name) => { const n = name.trim().slice(0, 40); setMemberName(n); writeLocal(MEMBER_KEY, n); };
 
   // Clean up the celebration timer when the app unmounts.
   useEffect(() => {
@@ -3319,7 +3408,12 @@ function App({ initialState, initialVersion, initialFresh }) {
             <h1 className="truncate font-noir text-xl leading-tight text-slate-50">The Fridge Graveyard</h1>
             <p className="truncate font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">YOUR COZY FOOD RESCUE CLUB</p>
           </div>
-          <span className="shrink-0 rounded border border-yellow-400/50 px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight text-yellow-300" title="Sample data and prices are simulated">
+          <div className="fg-user-chip">
+            <span className="fg-avatar" aria-hidden="true">{memberName.slice(0, 1).toUpperCase()}</span>
+            <span className="fg-user-name">{memberName}<small>{account.household.members.length > 1 ? `👥 ${account.household.members.length} in household` : 'Own fridge'}</small></span>
+            <button type="button" onClick={() => setConfirm({ title: 'Log out?', body: 'Your fridge stays saved. Log in again any time.', confirmLabel: 'Log out', onConfirm: onLogout })} aria-label="Log out">↪</button>
+          </div>
+          <span className="fg-proto-badge shrink-0 rounded border border-yellow-400/50 px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight text-yellow-300" title="Sample data and prices are simulated">
             Prototype<br />{state.demo ? 'Demo data' : 'Local data'}
           </span>
         </div>
@@ -3336,7 +3430,7 @@ function App({ initialState, initialVersion, initialFresh }) {
             onConfirm: () => { setState((s) => ({ ...s, shopping: [] })); toast('Shopping list cleared.'); } })} />}
         {tab === 'stats' && <Stats state={state} onReset={resetData} />}
         {tab === 'premium' && <Premium onScan={() => setScanOpen(true)} items={items} goals={goals} shopping={shopping} onCook={setCooking} onAddShopping={addShopping} toast={toast}
-          goRecipes={() => { setFocusId(null); goTab('recipes'); }} memberName={memberName} onSaveName={saveMemberName} askConfirm={setConfirm} logLength={state.log.length} />}
+          goRecipes={() => { setFocusId(null); goTab('recipes'); }} account={account} onAccountChange={setAccount} askConfirm={setConfirm} logLength={state.log.length} />}
 
         <footer className="mt-10 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">
 
@@ -3438,19 +3532,68 @@ function App({ initialState, initialVersion, initialFresh }) {
   );
 }
 
-// Fetch saved state from the backend first, then mount the app.
+function AuthScreen({ onSignedIn, notice }) {
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ username: '', password: '', displayName: '', code: '', remember: true });
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const set = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setError(''); };
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.username.trim() || !form.password) return setError('Enter a username and password.');
+    setBusy(true);
+    try { await signIn(mode, form); onSignedIn(); }
+    catch (err) { setError(err instanceof TypeError ? 'Could not reach the server. Make sure the backend is running.' : err.message); setBusy(false); }
+  };
+  return (
+    <div className="fg-auth">
+      <div className="fg-auth-card">
+        <div className="caution-tape fg-auth-tape" aria-hidden="true" />
+        <div className="fg-auth-brand"><span aria-hidden="true">🥦</span><div><h1>The Fridge Graveyard</h1><p>YOUR COZY FOOD RESCUE CLUB</p></div></div>
+        <div className="fg-auth-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={mode === 'login'} onClick={() => { setMode('login'); setError(''); }}>Log in</button>
+          <button type="button" role="tab" aria-selected={mode === 'register'} onClick={() => { setMode('register'); setError(''); }}>Create account</button>
+        </div>
+        {notice && <p className="fg-auth-notice">{notice}</p>}
+        <form onSubmit={submit} className="fg-auth-form" noValidate>
+          {mode === 'register' && <label>Your name<input value={form.displayName} onChange={(e) => set('displayName', e.target.value)} placeholder="e.g. Abdul" maxLength={40} autoComplete="name" /></label>}
+          <label>Username<input value={form.username} onChange={(e) => set('username', e.target.value)} placeholder="e.g. abdul" maxLength={20} autoCapitalize="none" autoComplete="username" data-autofocus /></label>
+          <label>Password<input type="password" value={form.password} onChange={(e) => set('password', e.target.value)} placeholder={mode === 'register' ? 'At least 6 characters' : ''} autoComplete={mode === 'register' ? 'new-password' : 'current-password'} /></label>
+          {mode === 'register' && <label>Household code <span>(optional)</span><input value={form.code} onChange={(e) => set('code', e.target.value)} placeholder="Join a flatmate's fridge, e.g. K7QM2P" maxLength={8} autoCapitalize="characters" /><small>Leave empty to start your own fridge. You can join one later too.</small></label>}
+          <label className="fg-auth-remember"><input type="checkbox" checked={form.remember} onChange={(e) => set('remember', e.target.checked)} /> Keep me logged in on this device</label>
+          {error && <p role="alert" className="fg-auth-error">{error}</p>}
+          <button type="submit" className="fg-auth-submit" disabled={busy}>{busy ? 'One moment…' : mode === 'register' ? 'Create account' : 'Log in'}</button>
+        </form>
+        <p className="fg-auth-small">{mode === 'login' ? <>New here? <button type="button" onClick={() => setMode('register')}>Create an account</button></> : <>Already have an account? <button type="button" onClick={() => setMode('login')}>Log in</button></>}</p>
+        <p className="fg-auth-small">Prototype: passwords are stored securely hashed, but please don't reuse a real password.</p>
+      </div>
+    </div>
+  );
+}
+
+// Log in first, then fetch the household's saved state from the backend and mount the app.
 function Root() {
   const [initial, setInitial] = useState(null);
   const [error, setError] = useState('');
+  const [needsLogin, setNeedsLogin] = useState(!sessionToken);
+  const [notice, setNotice] = useState('');
   const [retry, setRetry] = useState(0);
   useEffect(() => {
+    if (needsLogin) return;
     let active = true;
-    loadState().then(v => { if (active) setInitial(v); }).catch(e => { if (active) setError(e instanceof TypeError ? 'Could not reach the server. Make sure the backend is running, then retry.' : e.message); });
+    setInitial(null);
+    loadState().then(v => { if (active) setInitial(v); }).catch(e => {
+      if (!active) return;
+      if (e instanceof AuthError) { setNotice('Your session ended. Please log in again.'); setNeedsLogin(true); }
+      else setError(e instanceof TypeError ? 'Could not reach the server. Make sure the backend is running, then retry.' : e.message);
+    });
     return () => { active = false; };
-  }, [retry]);
+  }, [retry, needsLogin]);
+  const logout = async () => { await signOut(); setInitial(null); setNotice('You are logged out.'); setNeedsLogin(true); };
+  if (needsLogin) return <AuthScreen notice={notice} onSignedIn={() => { setNotice(''); setNeedsLogin(false); setRetry(n => n + 1); }} />;
   if (error) return <div className="min-h-screen grid place-items-center p-5"><div className="max-w-md rounded-2xl bg-white p-6 text-center text-purple-900"><h2 className="text-xl font-bold">Your fridge data is safe</h2><p className="my-4">{error}</p><button className="rounded-xl bg-lime-200 px-5 py-3" onClick={() => { setError(''); setRetry(n => n + 1); }}>Retry connection</button></div></div>;
   if (!initial) return <div className="min-h-screen grid place-items-center text-slate-400 font-mono">Opening the case files…</div>;
-  return <App initialState={initial.state} initialVersion={initial.version} initialFresh={!!initial.fresh} />;
+  return <App key={initial.account.user.username} initialAccount={initial.account} initialState={initial.state} initialVersion={initial.version} initialFresh={!!initial.fresh} onLogout={logout} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
