@@ -1,30 +1,57 @@
-# The Fridge Graveyard
+<div align="center">
 
-A food-waste detective app. React + Tailwind frontend, Python (FastAPI + SQLite) backend.
+# 🥦 The Fridge Graveyard
 
-## Team
+**Rescue your groceries before they become a cold case.**
 
-| Role                                | Name                  |
-|-------------------------------------|-----------------------|
-| Project Manager                     | Abdul Khan            |
-| Product / Research Lead             | Jaclyn Grace Christy  |
-| UX/UI Lead                          | Minha Ashehad Faizy   |
-| Development + Quality / Media Lead  | Prathibha             |
+A playful food-waste app for students and shared flats: track what's in your fridge, see what expires first,
+cook recipes that use it up, and share one fridge with your flatmates.
 
-## Project structure
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Tailwind](https://img.shields.io/badge/Tailwind-CSS-38BDF8?logo=tailwindcss&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-database-003B57?logo=sqlite&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)
 
-```
-frontend/index.html   the React app (single file)
-backend/main.py       FastAPI server: serves the page and the /api endpoints
-backend/fridge.db     SQLite database (created automatically on first run)
-requirements.txt      Python dependencies
-```
+<img src="docs/screenshots/fridge.jpg" alt="The Fridge Graveyard home screen: today's rescue mission and fridge stats" width="760">
 
-## Run it
+</div>
 
-Requires **Python 3.10 or newer** (FastAPI 0.162 and Uvicorn 0.54 no longer support 3.9).
-Check with `python3 --version`. On macOS the built-in `python3` is 3.9, so use a newer one,
-for example Homebrew's: `brew install python@3.12`, then create the venv with `python3.12`.
+---
+
+## ✨ What it does
+
+| | Feature | What you get |
+|---|---|---|
+| 🧊 | **Expiry-first fridge** | Every item sorted by what expires first, with a daily "rescue mission" and a suggested action: eat, freeze, cook or toss. |
+| 🧾 | **Receipt scanner** | Snap a grocery receipt and the food adds itself, with estimated expiry dates. Deposits, bags and discounts are skipped. |
+| 🍳 | **Rescue recipes** | 32 recipes ranked by how much at-risk food they use, with quantities, what's missing, and a nutrition estimate. |
+| 🥗 | **Food goals** | Diet (vegetarian, vegan, halal…), allergies, favourite and disliked ingredients, protein and fibre goals. |
+| 🗓️ | **Weekly meal planner** | Seven dinners planned around expiry dates, plus one shopping list for the week. |
+| 🛒 | **Shopping list** | Missing ingredients land here automatically, and you can tick them off in the shop. |
+| 🏠 | **Shared households** | Flatmates join with a 6-character code and share one fridge. Changes sync to everyone within seconds. |
+| 🕵️ | **Who ate what** | Every rescued or wasted item records who closed it, with a household scoreboard. |
+| 📊 | **Stats** | Rescue rate, items saved and wasted, and an estimate of the money you saved. |
+| 🔐 | **Accounts** | Log in with a username and password. Passwords are stored as salted hashes, never in plain text. |
+
+> ⭐ **Premium** is shown as a free 7-day trial, then €5 a month. This is a prototype, so the price is for demo only and no real payment is ever taken.
+
+<p align="center">
+  <img src="docs/screenshots/recipes.jpg" alt="A rescue recipe with nutrition estimate and the ingredients it uses" width="49%">
+  <img src="docs/screenshots/household.jpg" alt="Household sharing: join code, members and who ate what" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/login.jpg" alt="Create an account" width="28%">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/receipt-scanner.jpg" alt="Receipt scanner review screen" width="32%">
+</p>
+
+---
+
+## 🚀 Run it locally
+
+You need **Python 3.10 or newer**. On a Mac the built-in `python3` is 3.9, so install a newer one first, for example `brew install python@3.12`.
 
 ```bash
 python3.12 -m venv .venv
@@ -33,55 +60,41 @@ pip install -r requirements.txt
 uvicorn backend.main:app --reload
 ```
 
-Then open http://localhost:8000. API docs are at http://localhost:8000/docs.
+Then open **http://localhost:8000** and create an account. The interactive API docs are at http://localhost:8000/docs.
 
-## Features
+> 💡 If port 8000 is already in use, add `--port 8001` and open http://localhost:8001 instead.
 
-- **Fridge:** track items by expiry, with a daily rescue mission and suggested actions.
-- **Recipes:** 32 rescue recipes ranked by how much at-risk food they use, with estimated nutrition.
-- **Food goals:** eating style, allergies, favourite and disliked ingredients, protein and fibre goals.
-- **Premium (shown as a 7-day free trial, then €5 a month; demo price only, no real payments):**
-  - Receipt scanner: snap a grocery receipt and add the food with estimated expiry dates. The photo is
-    read on the device with Tesseract.js (free, open source) and never uploaded; the Python backend
-    (`backend/receipts.py`) turns the text into items using a German/English food dictionary.
-  - Weekly meal planner that plans 7 dinners around expiry dates and builds one shopping list.
-  - Household syncing: share one fridge with flatmates using a 6-character household code.
-  - Who-ate-what: every eaten or wasted item records who closed it, with a household scoreboard.
-- **Shopping list** and **stats** (rescue rate, money saved).
+### 👥 Try it with two people on one computer
 
-## Accounts and households
+1. **Normal browser window:** create an account (e.g. *Abdul*), open the **Premium** tab and copy the household code.
+2. **Incognito window:** create a second account (e.g. *Minha*) and paste the code into **Household code**.
+3. Mark an item as eaten in one window. Within a few seconds the other window shows *"Minha updated the fridge"* and the item disappears.
+4. Open **Who ate what** on the Premium tab to see who rescued what.
 
-Everyone logs in with a username and password. Passwords are stored as salted PBKDF2 hashes
-(`backend/auth.py`), never as plain text. Every account belongs to a household, and the
-household owns the fridge, shopping list, goals and stats.
+Use a normal and an incognito window (or two different browsers), because two tabs of the same window share one login.
 
-- **Create account** without a code: you get your own new fridge.
-- **Create account with a household code** (or join later on the Premium tab): you share that fridge.
-- Changes sync to everyone in the household every few seconds, with a notice like
-  "Minha updated the fridge". If two people save at the same moment, the later save is
-  rejected (HTTP 409) and that screen reloads the latest version instead of overwriting it.
-- **Leave household** gives you a fresh fridge of your own; the others keep the shared one.
+---
 
-When upgrading from the old single-fridge version, the first account created keeps the
-existing saved fridge.
+## 🧱 How it's built
 
-### Two-user demo on one computer
+```
+frontend/index.html    React 18 + Tailwind app (single file, compiled in the browser)
+backend/main.py        FastAPI server: serves the app and the /api endpoints
+backend/auth.py        accounts, password hashing and login sessions
+backend/receipts.py    turns receipt text into food items (German/English food dictionary)
+backend/fridge.db      SQLite database, created automatically on first run (not committed)
+tests/                 pytest suite for the API and the receipt reader
+docs/                  research documents and screenshots
+```
 
-1. Start the app: `uvicorn backend.main:app --reload --port 8001` and open http://localhost:8001.
-2. **Window 1 (normal Chrome window):** Create account, name "Abdul", username `abdul`.
-   Open the **Premium** tab and copy the household code.
-3. **Window 2 (Chrome incognito window, Cmd+Shift+N):** Create account, name "Minha",
-   username `minha`, and paste the code into "Household code".
-   Within a few seconds window 1 shows "Minha joined your household" and both members.
-4. In window 2, mark an item as eaten. Window 1 shows "Minha updated the fridge" and the item disappears.
-5. On the Premium tab, "Who ate what" shows who rescued what.
+- **Households:** every account belongs to a household, and the household owns the fridge, shopping list, goals and stats.
+- **Live sync:** each phone checks for changes every few seconds. If two people save at the same moment, the later save is rejected instead of silently overwriting the other person's change.
+- **Receipt scanning:** the photo is read on your device with [Tesseract.js](https://tesseract.projectnaptha.com/) (free and open source) and never uploaded. Only the recognised text goes to the Python backend.
 
-Tip: use a normal and an incognito window (or two different browsers), because two tabs of the
-same window share the same login if "Keep me logged in" is ticked.
+<details>
+<summary><b>📡 API reference</b></summary>
 
-## API
-
-All data endpoints need a login: `Authorization: Bearer <token>` from `/api/auth/login` or `/api/auth/register`.
+All data endpoints need a login: send `Authorization: Bearer <token>` from `/api/auth/login` or `/api/auth/register`.
 
 | Method | Path                       | What it does                                                 |
 |--------|----------------------------|--------------------------------------------------------------|
@@ -94,14 +107,16 @@ All data endpoints need a login: `Authorization: Bearer <token>` from `/api/auth
 | POST   | `/api/household/leave`     | Leave and start a fresh household                            |
 | GET    | `/api/state`               | Load the household's state, version and who saved it last    |
 | PUT    | `/api/state`               | Save the state (`X-Base-Version` guards against overwrites)  |
-| DELETE | `/api/state`               | Wipe this household's state (app reloads demo data)          |
+| DELETE | `/api/state`               | Wipe this household's state (the app reloads demo data)      |
 | GET    | `/api/items`               | List fridge items                                            |
 | GET    | `/api/shopping`            | List the shopping list                                       |
-| GET    | `/api/stats`               | Rescued / wasted stats                                       |
+| GET    | `/api/stats`               | Rescued and wasted stats                                     |
 | GET    | `/api/stats/members`       | Who-ate-what scoreboard for every household member           |
 | POST   | `/api/receipts/parse`      | Turn receipt text into food items                            |
 
-## Tests
+</details>
+
+### 🧪 Tests
 
 ```bash
 pip install -r requirements-dev.txt
@@ -109,3 +124,24 @@ pytest
 ```
 
 The tests use a temporary database, so your own `fridge.db` is never touched.
+
+---
+
+## 👩‍💻 Team
+
+| Role | Name | Focus |
+|---|---|---|
+| 🧭 Project Manager | **Abdul Muhaimin Khan** | Scope, coordination, GitHub workflow and integration |
+| 🔬 Product / Research Lead | **Jaclyn Grace Christy** | Competitor research, feature ranking, implementation prompts |
+| 🎨 UX/UI Lead | **Minha Ashehad Faizy** | Visual design, rescue flow, mascots, usability |
+| 🧪 Development + Quality / Media Lead | **Prathibha Prasanth** | Backend logic, bug fixes, testing |
+
+We worked through GitHub issues (one per role), feature branches and reviewed pull requests.
+
+<div align="center">
+
+**Less waste. More rescues.** 🥦
+
+<sub>Built for the Computer and Media Lab course, semester 4. All data shown in the app and screenshots is fictional demo data.</sub>
+
+</div>
